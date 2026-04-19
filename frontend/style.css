@@ -792,9 +792,184 @@ input:checked + .slider:before { transform: translateX(14px); }
 }
 
 
+
+
+
 /* ══════════════════════════════════════════════════════════════════
    NEW FEATURES — Phase 1/2/3
 ══════════════════════════════════════════════════════════════════ */
+
+/* ── Collapsible Sidebar ──────────────────────────────────────── */
+.sidebar-toggle-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+.sidebar-toggle-btn:hover { color: white; background: rgba(255,255,255,0.08); }
+.sidebar-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem; }
+
+.app-sidebar.collapsed {
+  width: 68px !important;
+  padding: 1.5rem 0.75rem;
+}
+.app-sidebar.collapsed .sidebar-full-text { display: none !important; }
+.app-sidebar.collapsed .sidebar-icon-only { display: inline !important; }
+.app-sidebar.collapsed .nav-item span,
+.app-sidebar.collapsed .nav-badge,
+.app-sidebar.collapsed .version,
+.app-sidebar.collapsed .user-info,
+.app-sidebar.collapsed .sidebar-divider { display: none !important; }
+.app-sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.75rem;
+}
+.app-sidebar.collapsed .nav-item i { width: 20px; height: 20px; }
+.app-sidebar.collapsed .user-block { justify-content: center; }
+.app-sidebar.collapsed .sidebar-toggle-btn i { transform: rotate(180deg); }
+.app-shell.sidebar-collapsed .app-sidebar { transition: width 0.3s cubic-bezier(0.4,0,0.2,1); }
+
+/* ── Keyboard Shortcuts Modal ─────────────────────────────────── */
+.shortcuts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.02);
+  font-size: 0.82rem;
+}
+.shortcut-row span { margin-left: auto; color: var(--text-secondary); font-size: 0.78rem; }
+kbd {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-bottom-width: 2px;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 0.72rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: white;
+  white-space: nowrap;
+}
+
+/* ── Onboarding Wizard ────────────────────────────────────────── */
+.onboarding-modal {
+  max-width: 520px;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  animation: modalEnter 0.4s ease-out;
+}
+.onboarding-progress {
+  display: flex;
+  gap: 6px;
+  padding: 1.25rem 2rem 0;
+  justify-content: center;
+}
+.onboarding-step-pip {
+  width: 32px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  transition: background 0.35s ease;
+}
+.onboarding-step-pip.active { background: var(--accent-primary); }
+.onboarding-step-pip.done { background: var(--success); }
+.onboarding-step {
+  padding: 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: heroFadeUp 0.35s ease;
+}
+.ob-icon { font-size: 2.5rem; text-align: center; }
+.ob-title { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: -0.02em; }
+.ob-desc { text-align: center; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+.ob-features { display: flex; flex-direction: column; gap: 0.6rem; margin: 0.5rem 0; }
+.ob-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.65rem 1rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.ob-feature-done { border-color: rgba(16,185,129,0.2); background: rgba(16,185,129,0.04); }
+.ob-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+.ob-next { justify-content: center; }
+.ob-skip {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+  padding: 0.25rem;
+  transition: color 0.2s;
+}
+.ob-skip:hover { color: white; }
+.ob-input {
+  width: 100%;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-color);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.85rem;
+  font-family: 'JetBrains Mono', monospace;
+  transition: border-color 0.2s;
+}
+.ob-input:focus { outline: none; border-color: var(--accent-primary); }
+
+/* ── Team Members ─────────────────────────────────────────────── */
+.team-member-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+.team-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 800; color: white;
+  flex-shrink: 0;
+}
+.team-info { flex: 1; }
+.team-email { font-size: 0.82rem; font-weight: 600; color: white; }
+.team-joined { font-size: 0.65rem; color: var(--text-secondary); }
+.team-role-badge { font-size: 0.6rem; font-weight: 800; padding: 3px 8px; border-radius: 999px; }
+.role-admin { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2); }
+.role-sre   { background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2); }
+.role-viewer{ background: rgba(100,116,139,0.15); color: #94a3b8; border: 1px solid rgba(100,116,139,0.2); }
+.team-remove-btn {
+  background: none; border: none; color: var(--text-secondary);
+  cursor: pointer; padding: 4px; border-radius: 4px; transition: color 0.2s;
+  font-size: 1rem;
+}
+.team-remove-btn:hover { color: #ef4444; }
 
 /* ── Simulate Outage Button ───────────────────────────────────── */
 .btn-simulate {

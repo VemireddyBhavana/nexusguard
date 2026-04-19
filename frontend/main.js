@@ -863,6 +863,231 @@ function initSSEStream() {
   }, 2000);
 }
 
+// ── COLLAPSIBLE SIDEBAR ────────────────────────────────────────
+function initSidebar() {
+  const sidebar = document.getElementById('app-sidebar');
+  const toggleBtn = document.getElementById('sidebar-toggle');
+  if (!sidebar || !toggleBtn) return;
+  const savedState = localStorage.getItem('nexus_sidebar_collapsed') === 'true';
+  if (savedState) sidebar.classList.add('collapsed');
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('collapsed');
+    localStorage.setItem('nexus_sidebar_collapsed', sidebar.classList.contains('collapsed'));
+    if (window.lucide) window.lucide.createIcons();
+  });
+}
+
+// ── KEYBOARD SHORTCUTS MODAL ───────────────────────────────────
+function initShortcutsModal() {
+  const modal = document.getElementById('shortcuts-modal');
+  const closeBtn = document.getElementById('shortcuts-close');
+  if (!modal) return;
+  closeBtn?.addEventListener('click', () => modal.classList.remove('active'));
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+}
+
+// ── ONBOARDING WIZARD ──────────────────────────────────────────
+function initOnboarding() {
+  const overlay = document.getElementById('onboarding-overlay');
+  if (!overlay) return;
+  // Show only on first visit
+  if (localStorage.getItem('nexus_onboarded') === 'true') {
+    overlay.style.display = 'none';
+    return;
+  }
+  overlay.classList.add('active');
+
+  function goToStep(n) {
+    document.querySelectorAll('.onboarding-step').forEach(s => s.style.display = 'none');
+    const step = document.getElementById(`ob-step-${n}`);
+    if (step) step.style.display = 'flex';
+    document.querySelectorAll('.onboarding-step-pip').forEach(p => {
+      const sn = parseInt(p.dataset.step);
+      p.classList.toggle('active', sn === n);
+      p.classList.toggle('done', sn < n);
+    });
+  }
+
+  document.querySelectorAll('.ob-next').forEach(btn => {
+    btn.addEventListener('click', () => goToStep(parseInt(btn.dataset.next)));
+  });
+
+  document.getElementById('ob-save-keys')?.addEventListener('click', () => {
+    const openKey = document.getElementById('ob-openai-key')?.value.trim();
+    const gemKey  = document.getElementById('ob-gemini-key')?.value.trim();
+    if (openKey) {
+      localStorage.setItem('nexus_openai_key', openKey);
+      const st = document.getElementById('ob-key-status');
+      if (st) st.innerHTML = '<span>✅</span><span>OpenAI key saved — Live AI mode enabled</span>';
+    }
+    if (gemKey) localStorage.setItem('nexus_gemini_key', gemKey);
+    goToStep(3);
+  });
+
+  document.querySelectorAll('.ob-skip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const cur = parseInt([...document.querySelectorAll('.onboarding-step')]
+        .find(s => s.style.display !== 'none')?.id.split('-').pop() || '1');
+      if (cur < 3) goToStep(3); else finishOnboarding();
+    });
+  });
+
+  document.getElementById('ob-finish')?.addEventListener('click', finishOnboarding);
+
+  function finishOnboarding() {
+    overlay.classList.remove('active');
+    overlay.style.display = 'none';
+    localStorage.setItem('nexus_onboarded', 'true');
+    showToast('🎉 Welcome to NexusGuard! Try the Auto-Detect button to run your first analysis.');
+  }
+}
+
+// ── TEAM MEMBERS ───────────────────────────────────────────────
+const AVATAR_COLORS = ['#3b82f6','#818cf8','#10b981','#f59e0b','#ef4444','#a855f7','#ec4899'];
+function initTeamMembers() {
+  const listEl = document.getElementById('team-members-list');
+  const inviteBtn = document.getElementById('invite-btn');
+  const emailInput = document.getElementById('invite-email');
+  const roleSelect = document.getElementById('invite-role');
+  if (!listEl || !inviteBtn) return;
+
+  // Seed default members
+  if (!localStorage.getItem('nexus_team')) {
+    const defaults = [
+      { email: 'admin@nexusguard.io', role: 'admin', joined: 'Owner · Since Apr 2026' },
+      { email: 'sre-lead@company.com', role: 'sre', joined: 'Joined Apr 19, 2026' },
+    ];
+    localStorage.setItem('nexus_team', JSON.stringify(defaults));
+  }
+
+  function renderTeam() {
+    const members = JSON.parse(localStorage.getItem('nexus_team') || '[]');
+    listEl.innerHTML = members.map((m, i) => {
+      const initials = m.email.split('@')[0].substring(0, 2).toUpperCase();
+      const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
+      return `<div class="team-member-row">
+        <div class="team-avatar" style="background:${color};">${initials}</div>
+        <div class="team-info">
+          <div class="team-email">${m.email}</div>
+          <div class="team-joined">${m.joined}</div>
+        </div>
+        <span class="team-role-badge role-${m.role}">${m.role.toUpperCase()}</span>
+        ${i > 0 ? `<button class="team-remove-btn" data-idx="${i}" title="Remove">✕</button>` : ''}
+      </div>`;
+    }).join('');
+    listEl.querySelectorAll('.team-remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const members = JSON.parse(localStorage.getItem('nexus_team') || '[]');
+        members.splice(parseInt(btn.dataset.idx), 1);
+        localStorage.setItem('nexus_team', JSON.stringify(members));
+        renderTeam();
+        showToast('Member removed.');
+      });
+    });
+  }
+
+  inviteBtn.addEventListener('click', () => {
+    const email = emailInput?.value.trim();
+    if (!email || !email.includes('@')) { showToast('Please enter a valid email.', 'danger'); return; }
+    const members = JSON.parse(localStorage.getItem('nexus_team') || '[]');
+    if (members.find(m => m.email === email)) { showToast('This member is already in the team.', 'danger'); return; }
+    members.push({ email, role: roleSelect.value, joined: `Invited ${new Date().toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' })}` });
+    localStorage.setItem('nexus_team', JSON.stringify(members));
+    emailInput.value = '';
+    renderTeam();
+    showToast(`✅ Invitation sent to ${email}`);
+    if (window.lucide) window.lucide.createIcons();
+  });
+
+  renderTeam();
+}
+
+// ── PDF REPORT EXPORT ─────────────────────────────────────────
+function exportPDF() {
+  if (!lastAiData) { showToast('Run an analysis first to generate a PDF report.', 'danger'); return; }
+  const id = `NX-${Math.floor(1000 + Math.random() * 9000)}`;
+  const ts = new Date().toLocaleString();
+  const win = window.open('', '_blank');
+  win.document.write(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NexusGuard Incident Report — ${id}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:#fff; color:#1e293b; padding:48px; font-size:13px; }
+    .header { display:flex; align-items:center; gap:16px; margin-bottom:32px; padding-bottom:24px; border-bottom:2px solid #e2e8f0; }
+    .logo { font-size:22px; font-weight:900; color:#1e293b; }
+    .logo span { color:#3b82f6; }
+    .meta { margin-left:auto; text-align:right; font-size:11px; color:#64748b; }
+    .badge { display:inline-block; padding:3px 10px; border-radius:999px; font-size:10px; font-weight:800; }
+    .badge-critical { background:#fee2e2; color:#ef4444; }
+    .badge-high { background:#ffedd5; color:#f97316; }
+    .badge-medium { background:#fef9c3; color:#ca8a04; }
+    .badge-low { background:#dcfce7; color:#16a34a; }
+    h1 { font-size:24px; font-weight:900; margin-bottom:4px; color:#0f172a; }
+    h2 { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#3b82f6; margin:28px 0 10px; border-bottom:1px solid #e2e8f0; padding-bottom:6px; }
+    p { line-height:1.7; color:#334155; }
+    table { width:100%; border-collapse:collapse; margin-bottom:12px; }
+    td { padding:8px 12px; border-bottom:1px solid #f1f5f9; font-size:12px; }
+    td:first-child { color:#64748b; width:200px; font-weight:600; }
+    .code { font-family:'JetBrains Mono',monospace; background:#f8fafc; padding:12px 16px; border-radius:6px; font-size:11.5px; border:1px solid #e2e8f0; line-height:1.7; white-space:pre-wrap; }
+    .agent-row { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid #f1f5f9; }
+    .agent-name { font-weight:700; width:90px; flex-shrink:0; }
+    .footer { margin-top:40px; padding-top:16px; border-top:1px solid #e2e8f0; font-size:10px; color:#94a3b8; display:flex; justify-content:space-between; }
+    .status-ok { color:#16a34a; font-weight:700; }
+    @media print { body { padding:24px; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="logo">Nexus<span>Guard</span></div>
+      <div style="font-size:10px;color:#94a3b8;margin-top:2px;">Autonomous DevOps Platform v2.1</div>
+    </div>
+    <div class="meta">
+      <div style="font-weight:700;font-size:14px;">Incident Report</div>
+      <div>${ts}</div>
+      <div style="margin-top:4px;font-weight:600;color:#3b82f6;">${id}</div>
+    </div>
+  </div>
+  <h1>${lastAiData.issue || 'Infrastructure Incident'} <span class="badge badge-${(lastAiData.severity||'high').toLowerCase()}">${lastAiData.severity||'HIGH'}</span></h1>
+  <h2>Incident Summary</h2>
+  <table>
+    <tr><td>Incident ID</td><td><strong>${id}</strong></td></tr>
+    <tr><td>Timestamp</td><td>${ts}</td></tr>
+    <tr><td>Severity</td><td>${lastAiData.severity||'High'}</td></tr>
+    <tr><td>Confidence</td><td>${Math.round((lastAiData.confidence||0.88)*100)}%</td></tr>
+    <tr><td>Safety Score</td><td>${lastAiData.safetyScore||98}%</td></tr>
+    <tr><td>Financial Risk</td><td>$${(lastAiData.financialImpact||0).toLocaleString()}</td></tr>
+    <tr><td>RAG Knowledge Used</td><td>${lastAiData.usedKnowledge ? '✅ Yes' : 'No'}</td></tr>
+    <tr><td>Recovery Code</td><td><code>${lastAiData.action?.recoveryCode||'GENERIC_OPTIMIZE'}</code></td></tr>
+    <tr><td>Slack Notified</td><td>${lastAiData.action?.slackDispatched ? '✅ Yes' : 'Not configured'}</td></tr>
+    <tr><td>Status</td><td class="status-ok">✓ RESOLVED</td></tr>
+  </table>
+  <h2>Root Cause Analysis</h2>
+  <p>${lastAiData.rootCause||'See analysis output.'}</p>
+  <h2>Remediation Steps</h2>
+  <div class="code">${(lastAiData.fix||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+  <h2>Multi-Agent Reasoning Chain</h2>
+  ${(lastAiData.reasoning||[]).map(r => {
+    const [name,...rest] = r.split(':');
+    return `<div class="agent-row"><span class="agent-name">${name||'Agent'}</span><span>${rest.join(':').trim()||r}</span></div>`;
+  }).join('')}
+  <h2>Agent Decision</h2>
+  <p>${lastAiData.agentDecision||'N/A'}</p>
+  <div class="footer">
+    <span>Auto-generated by NexusGuard Autonomous DevOps Platform v2.1 · Agentathon 2026</span>
+    <span>CONFIDENTIAL</span>
+  </div>
+</body>
+</html>`);
+  win.document.close();
+  setTimeout(() => { win.focus(); win.print(); }, 800);
+  showToast('📄 PDF report opened in new tab. Use browser print dialog to save.');
+}
+
 // ── SIMULATE MAJOR OUTAGE ─────────────────────────────────────
 function initSimulateOutage() {
   const btn = document.getElementById('simulate-outage-btn');
@@ -1143,6 +1368,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initSimulateOutage();
   initNotifications();
   initApiKeys();
+  initSidebar();
+  initShortcutsModal();
+  initOnboarding();
+  initTeamMembers();
+
+  // Wire PDF Export button
+  ui.downloadRunbook?.addEventListener('click', exportPDF);
 
   // Core
   ui.runBtn?.addEventListener('click', runWorkflow);
@@ -1180,8 +1412,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // CSV Export
   ui.exportCsvBtn?.addEventListener('click', exportCSV);
 
-  // Runbook Download
-  ui.downloadRunbook?.addEventListener('click', downloadRunbook);
+  // Runbook Download → PDF Export
+  ui.downloadRunbook?.addEventListener('click', exportPDF);
 
   // History Search & Filter
   ui.historySearch?.addEventListener('input', filterHistory);
@@ -1193,12 +1425,43 @@ document.addEventListener('DOMContentLoaded', () => {
   ui.chatSend?.addEventListener('click', sendMessage);
   ui.chatInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-  // Keyboard Shortcuts
+  // ── Extended Keyboard Shortcuts ────────────────────────────
   document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runWorkflow(); }
+    const tag = document.activeElement?.tagName;
+    const isInput = ['INPUT','TEXTAREA','SELECT'].includes(tag);
+
+    // Always: Esc
     if (e.key === 'Escape') {
       document.getElementById('incident-modal')?.classList.remove('active');
+      document.getElementById('shortcuts-modal')?.classList.remove('active');
       ui.chatWidget?.classList.remove('active');
+    }
+
+    if (isInput) return;
+
+    // ? → open keyboard shortcuts
+    if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
+      e.preventDefault();
+      document.getElementById('shortcuts-modal')?.classList.add('active');
+      return;
+    }
+
+    if (e.ctrlKey || e.metaKey) {
+      switch (e.key) {
+        case 'Enter': e.preventDefault(); runWorkflow(); break;
+        case 'k': e.preventDefault();
+          ui.logInput.value = ['CRITICAL: Redis cache cluster 10.4.4.2 unreachable. Queue backing up at 12K/s.',
+            'ERROR: Stripe Payment Gateway 504 timeout. Orders dropping. Failover required.',
+            'FATAL: PostgreSQL connection refused 5432. Replica lag >60s.',
+            'SECURITY: JWT token expired on auth microservice. Brute force suspected.',
+            'INFRA: Kubernetes pod OOMKilled. Memory limit 512Mi exceeded.'][Math.floor(Math.random()*5)];
+          runWorkflow(); break;
+        case 'b': e.preventDefault(); document.getElementById('sidebar-toggle')?.click(); break;
+        case 'd': e.preventDefault(); switchToView('dashboard'); break;
+        case 'h': e.preventDefault(); switchToView('history'); break;
+        case 'p': e.preventDefault(); exportPDF(); break;
+        case 's': e.preventDefault(); ui.saveSettings?.click(); break;
+      }
     }
   });
 

@@ -130,11 +130,14 @@
 
     <div class="app-shell" id="app-shell" style="display:none">
         <!-- Dashboard Sidebar -->
-        <aside class="app-sidebar">
+        <aside class="app-sidebar" id="app-sidebar">
             <div class="sidebar-header">
-                <div class="logo">NexusGuard <span class="fire-icon"></span></div>
-                <div class="version">v2.0 PRO</div>
+                <div class="logo"><span class="sidebar-full-text">NexusGuard</span><span class="sidebar-icon-only" style="display:none;">🛡️</span></div>
+                <button id="sidebar-toggle" class="sidebar-toggle-btn" title="Toggle Sidebar">
+                    <i data-lucide="panel-left-close" style="width:16px;height:16px;"></i>
+                </button>
             </div>
+            <div class="version sidebar-full-text">v2.1 PRO</div>
 
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item active" data-view="dashboard">
@@ -578,6 +581,32 @@
                             </div>
                         </div>
                         <button id="save-settings" class="btn-primary" style="margin-top: 2rem;">SAVE CONFIGURATION</button>
+
+                        <!-- Team Members -->
+                        <div class="glass-card" style="margin-top:2rem;">
+                            <h4 style="margin-bottom:1.25rem;font-size:0.9rem;border-bottom:1px solid var(--border-color);padding-bottom:0.5rem;display:flex;align-items:center;gap:8px;">
+                                👥 Team Members
+                                <span style="font-size:0.6rem;padding:2px 8px;border-radius:999px;background:rgba(129,140,248,0.1);border:1px solid rgba(129,140,248,0.2);color:#818cf8;">Pro Feature</span>
+                            </h4>
+                            <div id="team-members-list" style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.25rem;"></div>
+                            <div style="display:flex;gap:8px;">
+                                <input type="email" id="invite-email" placeholder="colleague@company.com" style="flex:1;background:rgba(0,0,0,0.2);border:1px solid var(--border-color);padding:0.65rem 1rem;border-radius:8px;color:white;font-size:0.8rem;">
+                                <select id="invite-role" style="background:rgba(0,0,0,0.2);border:1px solid var(--border-color);color:var(--text-secondary);padding:0.65rem 0.75rem;border-radius:8px;font-size:0.8rem;">
+                                    <option value="admin">Admin</option>
+                                    <option value="sre" selected>SRE</option>
+                                    <option value="viewer">Viewer</option>
+                                </select>
+                                <button id="invite-btn" class="btn-primary" style="padding:0.65rem 1.25rem;white-space:nowrap;">
+                                    <i data-lucide="user-plus" style="width:14px;height:14px;"></i> Invite
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Keyboard Shortcuts hint -->
+                        <div style="margin-top:1.5rem;padding:0.85rem 1.25rem;background:rgba(255,255,255,0.02);border:1px solid var(--border-color);border-radius:8px;display:flex;align-items:center;gap:12px;font-size:0.8rem;color:var(--text-secondary);">
+                            <span>⌨️</span>
+                            <span>Press <kbd style="background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:4px;font-size:0.75rem;color:white;">?</kbd> anywhere to see all keyboard shortcuts</span>
+                        </div>
                     </div>
                 </div>
 
@@ -681,6 +710,90 @@
                 <div class="session-timer"><span data-i18n="SESSION">Session</span>: 02:44:12</div>
             </footer>
         </main>
+    </div>
+
+    <!-- ── KEYBOARD SHORTCUTS MODAL ──────────────────────────── -->
+    <div id="shortcuts-modal" class="modal-overlay" role="dialog" aria-label="Keyboard Shortcuts">
+        <div class="modal-content" style="max-width:520px;">
+            <div class="modal-header">
+                <h3 style="display:flex;align-items:center;gap:8px;">⌨️ Keyboard Shortcuts</h3>
+                <button class="modal-close" id="shortcuts-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>Enter</kbd><span>Run Analysis</span></div>
+                    <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>K</kbd><span>Auto-Detect Log</span></div>
+                    <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>B</kbd><span>Toggle Sidebar</span></div>
+                    <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>D</kbd><span>Go to Dashboard</span></div>
+                    <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>H</kbd><span>Go to History</span></div>
+                    <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>P</kbd><span>Download PDF Runbook</span></div>
+                    <div class="shortcut-row"><kbd>Ctrl</kbd>+<kbd>S</kbd><span>Save Settings</span></div>
+                    <div class="shortcut-row"><kbd>?</kbd><span>Show this panel</span></div>
+                    <div class="shortcut-row"><kbd>Esc</kbd><span>Close modal / Chat</span></div>
+                    <div class="shortcut-row"><kbd>Space</kbd><span>Simulate Outage (dashboard)</span></div>
+                </div>
+                <div style="margin-top:1.5rem;padding:1rem;background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.15);border-radius:8px;font-size:0.78rem;color:var(--text-secondary);">
+                    💡 Tip: Press <kbd style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:3px;font-size:0.75rem;">?</kbd> anywhere in the dashboard to open this panel.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── ONBOARDING WIZARD ─────────────────────────────────── -->
+    <div id="onboarding-overlay" class="modal-overlay" style="background:rgba(0,0,0,0.92);z-index:10000;">
+        <div class="modal-content onboarding-modal">
+            <div class="onboarding-progress">
+                <div class="onboarding-step-pip active" data-step="1"></div>
+                <div class="onboarding-step-pip" data-step="2"></div>
+                <div class="onboarding-step-pip" data-step="3"></div>
+            </div>
+            <!-- Step 1 -->
+            <div class="onboarding-step" id="ob-step-1">
+                <div class="ob-icon">🛡️</div>
+                <h2 class="ob-title">Welcome to NexusGuard</h2>
+                <p class="ob-desc">Your autonomous AI DevOps guardian. Let's get you set up in 3 quick steps so you can start detecting and resolving infrastructure incidents.</p>
+                <div class="ob-features">
+                    <div class="ob-feature"><span>👁️</span><span>Perception — detects issues in real-time</span></div>
+                    <div class="ob-feature"><span>🧠</span><span>RAG AI — retrieves relevant knowledge and reasons</span></div>
+                    <div class="ob-feature"><span>🛠️</span><span>Action — dispatches fixes and alerts your team</span></div>
+                </div>
+                <div class="ob-actions">
+                    <button class="btn-primary ob-next" data-next="2">Get Started →</button>
+                    <button class="ob-skip">Skip Setup</button>
+                </div>
+            </div>
+            <!-- Step 2 -->
+            <div class="onboarding-step" id="ob-step-2" style="display:none;">
+                <div class="ob-icon">🔑</div>
+                <h2 class="ob-title">Add Your API Key</h2>
+                <p class="ob-desc">NexusGuard needs an OpenAI or Gemini key to power its AI reasoning engine. Your keys are stored locally and never sent to any server.</p>
+                <div style="margin:1.5rem 0;">
+                    <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:0.5rem;">OPENAI API KEY <span style="opacity:0.5;">(recommended)</span></label>
+                    <input type="password" id="ob-openai-key" placeholder="sk-••••••••••••••••" class="ob-input">
+                    <label style="font-size:0.75rem;color:var(--text-secondary);display:block;margin-bottom:0.5rem;margin-top:1rem;">OR — GEMINI API KEY</label>
+                    <input type="password" id="ob-gemini-key" placeholder="AIza••••••••••••••" class="ob-input">
+                </div>
+                <div class="ob-actions">
+                    <button class="btn-primary ob-next" data-next="3" id="ob-save-keys">Save Keys →</button>
+                    <button class="ob-skip">Use Demo Mode</button>
+                </div>
+            </div>
+            <!-- Step 3 -->
+            <div class="onboarding-step" id="ob-step-3" style="display:none;">
+                <div class="ob-icon">🚀</div>
+                <h2 class="ob-title">You're Ready!</h2>
+                <p class="ob-desc">NexusGuard is fully configured. Try running your first AI analysis by clicking <strong>Auto-Detect</strong> on the dashboard — the agents will spring into action.</p>
+                <div class="ob-features">
+                    <div class="ob-feature ob-feature-done"><span>✅</span><span>Platform initialized</span></div>
+                    <div class="ob-feature ob-feature-done" id="ob-key-status"><span>✅</span><span>Demo mode active (add API key in Settings)</span></div>
+                    <div class="ob-feature ob-feature-done"><span>✅</span><span>RAG knowledge base loaded (30+ patterns)</span></div>
+                    <div class="ob-feature ob-feature-done"><span>✅</span><span>All 5 agents online</span></div>
+                </div>
+                <div class="ob-actions">
+                    <button class="btn-primary" id="ob-finish">Launch Dashboard →</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Interactive Agent Chat Widget -->
