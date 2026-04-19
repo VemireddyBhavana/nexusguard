@@ -546,16 +546,6 @@ The Memory Agent was added last — but it's what moves NexusGuard from *reactiv
 
 ---
 
-## 🤝 Contributing
-
-Pull requests welcome! For major changes, please open an issue first.
-
-1. Fork the repo
-2. Create your feature branch: `git checkout -b feature/my-feature`
-3. Commit your changes: `git commit -m 'Add my feature'`
-4. Push to the branch: `git push origin feature/my-feature`
-5. Open a Pull Request
-
 ---
 
 ## 📄 License
@@ -566,7 +556,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 <div align="center">
 
-**Built with ❤️ for Agentathon 2026**
+
 
 *NexusGuard — Because your infrastructure deserves a guardian that never sleeps.*
 
