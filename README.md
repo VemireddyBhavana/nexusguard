@@ -70,6 +70,7 @@ Instead of just sending a Slack alert, NexusGuard:
 
 | Feature | Description |
 |---|---|
+| 🚀 **Hero Landing Page** | Stunning full-screen landing with animated particle canvas, orbital rings, and live stat counters |
 | 📋 **Log Analysis** | Paste any server log — NexusGuard returns severity, root cause, fix, confidence score |
 | 🧠 **Agent Decision Panel** | See exactly which agents fired and what decision was made |
 | 📡 **Real-Time SSE Feed** | Live event stream — webhook hits broadcast instantly to the dashboard |
@@ -441,6 +442,7 @@ The NexusGuard dashboard is a **single-page application** built with vanilla JS 
 
 | Panel | Description |
 |---|---|
+| **Hero Landing Page** | Full-screen entry with animated particle canvas, 3 orbital rings, stat counters, pipeline pills, and "Launch Dashboard" CTA |
 | **Log Analysis** | Text area input for pasting logs; supports file drag-and-drop |
 | **Agent Decision Panel** | Shows strategy, matched RAG entries, and recovery code |
 | **AI Reasoning Chain** | Guardian → Sleuth → Fixer → Vigilant step breakdown |
@@ -453,10 +455,11 @@ The NexusGuard dashboard is a **single-page application** built with vanilla JS 
 
 ### Design System
 
-- **Theme:** Dark glassmorphism with a `#0f1117` base + `#7c3aed` / `#6d28d9` purple accent palette
-- **Typography:** Inter (Google Fonts)
-- **Effects:** Gradient borders, backdrop blur, CSS animations, live pulse indicators
-- **Responsive:** Sidebar navigation with collapsible sections
+- **Theme:** Dark glassmorphism with a `#050608` base + `#3b82f6` / `#818cf8` blue-indigo accent palette
+- **Typography:** Inter (headings/UI) + JetBrains Mono (console/code)
+- **Hero Effects:** Animated particle canvas (80 nodes + connecting lines), 3 orbital rings (28s / 44s / 65s), radial gradient background
+- **Dashboard Effects:** Gradient borders, backdrop blur, CSS animations, live pulse indicators
+- **Responsive:** Sidebar navigation on desktop; hero collapses gracefully on mobile
 
 ---
 
@@ -543,6 +546,16 @@ The dashboard was built with pure HTML/CSS/JS — no component framework — to 
 
 #### Phase 8: Predictive Intelligence
 The Memory Agent was added last — but it's what moves NexusGuard from *reactive* to *predictive*. By tracking incident patterns, it can warn you that a systemic failure is building **before** the next crash hits.
+
+#### Phase 9: Hero Landing Page
+First impressions matter — especially at a hackathon. We added a full-screen hero landing experience featuring:
+- **Animated particle canvas** — 80 floating nodes with network connection lines
+- **Three orbiting rings** at different rotation speeds for depth and motion
+- **Animated stat counters** — 99.9% uptime, 850K costs protected, 5 agents, 30+ patterns
+- **Agent pipeline pills** — color-coded glowing indicators showing the live agent flow
+- **Smooth transition** — scale + fade exit animation into the main dashboard
+
+The hero sets the tone: you're not looking at a demo app. You're looking at an enterprise-grade autonomous AI platform.
 
 ---
 
