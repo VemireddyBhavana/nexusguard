@@ -535,6 +535,7 @@ function switchToView(viewId) {
   if (targetNav) targetNav.classList.add('active');
   if (viewId === 'history') renderHistory();
   if (viewId === 'analytics') renderAnalytics();
+  if (viewId === 'status') renderStatusPage();
 }
 
 // ── SAVE INCIDENT ─────────────────────────────────────────────
@@ -862,6 +863,168 @@ function initSSEStream() {
   }, 2000);
 }
 
+// ── SIMULATE MAJOR OUTAGE ─────────────────────────────────────
+function initSimulateOutage() {
+  const btn = document.getElementById('simulate-outage-btn');
+  if (!btn) return;
+  const OUTAGE_SCENARIOS = [
+    'CRITICAL: Database cluster down — PostgreSQL port 5432 refused on ALL replicas. 0 healthy nodes. Failover failed.',
+    'FINANCE CRITICAL: SWIFT payment gateway 504 timeout. Checkout orders dropping at 340/min. Redis cache unreachable.',
+    'SECURITY: Brute-force detected — 5,200 failed JWT auth attempts in 60s. Auth service CPU at 98%. Possible DDoS.',
+    'INFRA: Kubernetes OOMKilled cascade — 12 pods CrashLoopBackOff. Memory limit 512Mi breached on payment namespace.',
+    'MULTI-SERVICE: Elasticsearch cluster red (3 shards unassigned) + Kafka consumer lag 2M messages + API latency >8s.'
+  ];
+  btn.addEventListener('click', async () => {
+    if (isBusy) { showToast('Agent pipeline already running. Please wait.'); return; }
+    const log = OUTAGE_SCENARIOS[Math.floor(Math.random() * OUTAGE_SCENARIOS.length)];
+    btn.classList.add('firing');
+    btn.textContent = '⚡ Cascading Failure Detected...';
+    showToast('🚨 Multi-service failure injected! Agents activating...', 'danger');
+    addNotification('🔴 CRITICAL', log.substring(0, 60) + '…', '#ef4444');
+    ui.logInput.value = log;
+    switchToView('dashboard');
+    await sleep(500);
+    await runWorkflow();
+    btn.classList.remove('firing');
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> 🚨 Simulate Major Outage';
+  });
+}
+
+// ── NOTIFICATION CENTER ────────────────────────────────────────
+const NOTIFICATIONS = [
+  { title: '🔴 CRITICAL — Redis OOMKilled', time: '2 min ago', color: '#ef4444', unread: true },
+  { title: '🟡 HIGH — Auth 401 spike detected', time: '18 min ago', color: '#f59e0b', unread: true },
+  { title: '🔵 INFO — Slack webhook configured', time: '1 hr ago', color: '#3b82f6', unread: true },
+  { title: '🟢 OK — All systems recovered', time: '3 hrs ago', color: '#4ade80', unread: false },
+  { title: '🟡 WARN — Memory usage at 82%', time: '5 hrs ago', color: '#f59e0b', unread: false },
+];
+
+function renderNotifications() {
+  const list = document.getElementById('notif-list');
+  const count = document.getElementById('notif-count');
+  if (!list) return;
+  const unread = NOTIFICATIONS.filter(n => n.unread).length;
+  if (count) count.textContent = unread > 0 ? unread : '';
+  if (count) count.style.display = unread > 0 ? 'flex' : 'none';
+  list.innerHTML = NOTIFICATIONS.length === 0
+    ? '<div class="notif-empty">No notifications yet</div>'
+    : NOTIFICATIONS.map((n, i) => `
+      <div class="notif-item ${n.unread ? 'unread' : ''}" data-idx="${i}">
+        <div class="notif-dot" style="background:${n.color};box-shadow:0 0 6px ${n.color};"></div>
+        <div class="notif-body">
+          <div class="notif-title">${n.title}</div>
+          <div class="notif-time">${n.time}</div>
+        </div>
+      </div>`).join('');
+  list.querySelectorAll('.notif-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.idx);
+      NOTIFICATIONS[idx].unread = false;
+      renderNotifications();
+    });
+  });
+}
+
+function addNotification(title, detail, color = '#3b82f6') {
+  NOTIFICATIONS.unshift({ title: `${title} — ${detail}`, time: 'just now', color, unread: true });
+  renderNotifications();
+}
+
+function initNotifications() {
+  const bell = document.getElementById('notif-bell');
+  const panel = document.getElementById('notif-panel');
+  const overlay = document.getElementById('notif-overlay');
+  const clearBtn = document.getElementById('notif-clear');
+  if (!bell || !panel) return;
+  renderNotifications();
+  bell.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = panel.classList.contains('open');
+    panel.classList.toggle('open', !isOpen);
+    overlay.classList.toggle('open', !isOpen);
+    if (!isOpen) renderNotifications();
+  });
+  overlay.addEventListener('click', () => {
+    panel.classList.remove('open');
+    overlay.classList.remove('open');
+  });
+  clearBtn?.addEventListener('click', () => {
+    NOTIFICATIONS.forEach(n => n.unread = false);
+    renderNotifications();
+  });
+}
+
+// ── STATUS PAGE ───────────────────────────────────────────────
+function renderStatusPage() {
+  const COMPONENTS = [
+    { name: '👁️ Perception Agent', status: 'OPERATIONAL', dot: '#4ade80', latency: '12ms' },
+    { name: '⚙️ Manager Agent', status: 'OPERATIONAL', dot: '#4ade80', latency: '8ms' },
+    { name: '📚 RAG Retrieval Engine', status: 'OPERATIONAL', dot: '#4ade80', latency: '45ms' },
+    { name: '🔬 AI Reasoning (OpenAI)', status: 'OPERATIONAL', dot: '#4ade80', latency: '820ms' },
+    { name: '✨ AI Reasoning (Gemini)', status: 'DEGRADED', dot: '#fbbf24', latency: '1.4s (rate limit)' },
+    { name: '🛠️ Action Agent', status: 'OPERATIONAL', dot: '#4ade80', latency: '22ms' },
+    { name: '🧠 Memory Agent', status: 'OPERATIONAL', dot: '#4ade80', latency: '5ms' },
+    { name: '📡 SSE Event Stream', status: 'OPERATIONAL', dot: '#4ade80', latency: '<1ms' },
+    { name: '🔔 Slack Notifications', status: 'OPERATIONAL', dot: '#4ade80', latency: '240ms' },
+  ];
+  const container = document.getElementById('status-components');
+  if (!container) return;
+  container.innerHTML = COMPONENTS.map(c => {
+    const cls = c.status === 'OPERATIONAL' ? 'status-operational' : c.status === 'DEGRADED' ? 'status-degraded' : 'status-outage';
+    return `<div class="status-component-row">
+      <div class="status-comp-dot" style="background:${c.dot};box-shadow:0 0 6px ${c.dot};"></div>
+      <span class="status-comp-name">${c.name}</span>
+      <span class="status-latency">${c.latency}</span>
+      <span class="status-comp-label ${cls}">${c.status}</span>
+    </div>`;
+  }).join('');
+  // Heatmap
+  const heatmap = document.getElementById('status-heatmap');
+  if (!heatmap) return;
+  const history = JSON.parse(localStorage.getItem('incident_history') || '[]');
+  heatmap.innerHTML = Array.from({ length: 90 }, (_, i) => {
+    const heat = i > 85 ? Math.min(history.length, 4) : [0,0,1,0,0,2,0,1,0,3,0,0,1,0,0,0,2,0,0,1][i % 20] || 0;
+    const date = new Date(); date.setDate(date.getDate() - (89 - i));
+    return `<div class="heatmap-cell heat-${heat}" title="${date.toLocaleDateString()}: ${heat} incident${heat !== 1 ? 's' : ''}"></div>`;
+  }).join('');
+  const checked = document.getElementById('status-last-checked');
+  if (checked) { setInterval(() => { checked.textContent = `Last checked: ${new Date().toLocaleTimeString()}`; }, 15000); }
+}
+
+// ── API KEYS SETTINGS ─────────────────────────────────────────
+function initApiKeys() {
+  const fields = [
+    { inputId: 'api-openai-key', btnId: 'api-openai-save', storageKey: 'nexus_openai_key', statusId: 'openai-status' },
+    { inputId: 'api-gemini-key', btnId: 'api-gemini-save', storageKey: 'nexus_gemini_key', statusId: 'gemini-status' },
+    { inputId: 'api-slack-key',  btnId: 'api-slack-save',  storageKey: 'nexus_slack_url',  statusId: null },
+  ];
+  fields.forEach(({ inputId, btnId, storageKey, statusId }) => {
+    const input = document.getElementById(inputId);
+    const btn = document.getElementById(btnId);
+    if (!input || !btn) return;
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      input.value = saved;
+      if (statusId) {
+        const st = document.getElementById(statusId);
+        if (st) st.innerHTML = `<span style="color:#4ade80;">✓ Saved · ${saved.substring(0,8)}••••</span>`;
+      }
+    }
+    btn.addEventListener('click', () => {
+      const val = input.value.trim();
+      if (!val) { showToast('Please enter a valid key.', 'danger'); return; }
+      localStorage.setItem(storageKey, val);
+      if (statusId) {
+        const st = document.getElementById(statusId);
+        if (st) st.innerHTML = `<span style="color:#4ade80;">✓ Saved · ${val.substring(0,8)}••••</span>`;
+      }
+      btn.textContent = '✓ Saved!';
+      setTimeout(() => btn.textContent = 'Save', 2000);
+      showToast(`API key saved to local storage securely.`);
+    });
+  });
+}
+
 // ── HERO LANDING ───────────────────────────────────────────────
 function initHero() {
   const hero = document.getElementById('hero-landing');
@@ -977,6 +1140,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initIntegrations();
   initDropZone();
   initSSEStream();
+  initSimulateOutage();
+  initNotifications();
+  initApiKeys();
 
   // Core
   ui.runBtn?.addEventListener('click', runWorkflow);

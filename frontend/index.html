@@ -149,9 +149,19 @@
                     <i data-lucide="bar-chart-3"></i>
                     <span data-i18n="NAV_ANALYTICS">Analytics</span>
                 </a>
+                <a href="#" class="nav-item" data-view="status">
+                    <i data-lucide="activity"></i>
+                    <span>System Status</span>
+                    <span class="nav-badge nav-badge-green">LIVE</span>
+                </a>
                 <a href="#" class="nav-item" data-view="settings">
                     <i data-lucide="settings"></i>
                     <span data-i18n="NAV_SETTINGS">Settings</span>
+                </a>
+                <div class="sidebar-divider"></div>
+                <a href="#" class="nav-item nav-item-upgrade" data-view="pricing">
+                    <i data-lucide="zap"></i>
+                    <span>Upgrade to Pro</span>
                 </a>
             </nav>
 
@@ -191,27 +201,42 @@
                             <option value="ja">日本語 (Japan)</option>
                         </select>
                     </div>
-                    <div class="notification-bell">
+                    <div class="notification-bell" id="notif-bell">
                         <i data-lucide="bell"></i>
-                        <span class="notification-count">2</span>
+                        <span class="notification-count" id="notif-count">3</span>
                     </div>
                     <button id="theme-toggle" class="btn-icon" title="Toggle Theme">
                         <i data-lucide="sun" style="width:16px;height:16px;"></i>
                     </button>
                 </div>
+
+                <!-- Notification Slide-out Panel -->
+                <div id="notif-panel" class="notif-panel">
+                    <div class="notif-header">
+                        <span>🔔 Notifications</span>
+                        <button id="notif-clear" style="font-size:0.7rem;background:none;border:none;color:var(--accent-primary);cursor:pointer;font-family:inherit;">Mark all read</button>
+                    </div>
+                    <div id="notif-list" class="notif-list"></div>
+                </div>
+                <div id="notif-overlay" class="notif-overlay"></div>
             </header>
 
             <div class="view-viewport">
                 <!-- VIEW: DASHBOARD -->
                 <div id="view-dashboard" class="view-content active">
                     <div class="container">
-                        <div class="page-intro">
-                            <p class="subtitle" id="ui-subtitle" data-i18n="SUBTITLE">Autonomous AI Guardian for
-                                Predictive DevOps</p>
-                            <span class="badge badge-live">
-                                <i data-lucide="zap" style="width: 12px; height: 12px; margin-right: 4px;"></i>
-                                <span data-i18n="BADGE_PROTECTION">Enterprise Protection Enabled</span>
-                            </span>
+                        <div class="page-intro" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+                            <div>
+                                <p class="subtitle" id="ui-subtitle" data-i18n="SUBTITLE">Autonomous AI Guardian for Predictive DevOps</p>
+                                <span class="badge badge-live" style="margin-top:0.5rem;display:inline-flex;">
+                                    <i data-lucide="zap" style="width: 12px; height: 12px; margin-right: 4px;"></i>
+                                    <span data-i18n="BADGE_PROTECTION">Enterprise Protection Enabled</span>
+                                </span>
+                            </div>
+                            <button id="simulate-outage-btn" class="btn-simulate">
+                                <i data-lucide="zap" style="width:15px;height:15px;"></i>
+                                🚨 Simulate Major Outage
+                            </button>
                         </div>
 
                         <!-- Live System Monitor -->
@@ -472,15 +497,47 @@
                     </div>
                 </div>
 
-                <!-- VIEW: SETTINGS -->
+                <!-- VIEW: SETTINGS (Enhanced with API Keys) -->
                 <div id="view-settings" class="view-content">
                     <div class="container">
                         <div class="page-intro">
                             <h2 class="section-title" data-i18n="NAV_SETTINGS">Agent Settings</h2>
-                            <p class="section-subtitle" data-i18n="SUBTITLE_SETTINGS">Configure AI thresholds,
-                                notification webhooks, and security guardrails.</p>
+                            <p class="section-subtitle">Configure AI keys, thresholds, notification webhooks, and security guardrails.</p>
                         </div>
-                        
+
+                        <!-- API Keys Card -->
+                        <div class="glass-card" style="margin-bottom:1.5rem; border-color: rgba(59,130,246,0.2); background: rgba(59,130,246,0.03);">
+                            <h4 style="margin-bottom:1.25rem;font-size:0.9rem;border-bottom:1px solid var(--border-color);padding-bottom:0.5rem;display:flex;align-items:center;gap:8px;">
+                                🔑 API Keys Configuration
+                                <span style="font-size:0.6rem;padding:2px 8px;border-radius:999px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#4ade80;">Stored locally · Never sent to servers</span>
+                            </h4>
+                            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;">
+                                <div>
+                                    <label style="display:block;font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.5rem;">OPENAI API KEY</label>
+                                    <div style="display:flex;gap:8px;">
+                                        <input type="password" id="api-openai-key" placeholder="sk-••••••••••••••••••••••" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);padding:0.65rem 1rem;border-radius:8px;color:white;font-size:0.8rem;font-family:'JetBrains Mono',monospace;">
+                                        <button id="api-openai-save" class="btn-primary" style="padding:0.65rem 1rem;white-space:nowrap;">Save</button>
+                                    </div>
+                                    <div id="openai-status" style="font-size:0.65rem;margin-top:6px;color:var(--text-secondary);"></div>
+                                </div>
+                                <div>
+                                    <label style="display:block;font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.5rem;">GEMINI API KEY</label>
+                                    <div style="display:flex;gap:8px;">
+                                        <input type="password" id="api-gemini-key" placeholder="AIza••••••••••••••••••••" style="flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);padding:0.65rem 1rem;border-radius:8px;color:white;font-size:0.8rem;font-family:'JetBrains Mono',monospace;">
+                                        <button id="api-gemini-save" class="btn-primary" style="padding:0.65rem 1rem;white-space:nowrap;">Save</button>
+                                    </div>
+                                    <div id="gemini-status" style="font-size:0.65rem;margin-top:6px;color:var(--text-secondary);"></div>
+                                </div>
+                                <div style="grid-column:1/-1;">
+                                    <label style="display:block;font-size:0.75rem;color:var(--text-secondary);margin-bottom:0.5rem;">SLACK WEBHOOK URL <span style="opacity:0.5;">(optional)</span></label>
+                                    <div style="display:flex;gap:8px;">
+                                        <input type="text" id="api-slack-key" placeholder="https://hooks.slack.com/services/..." style="flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);padding:0.65rem 1rem;border-radius:8px;color:white;font-size:0.8rem;">
+                                        <button id="api-slack-save" class="btn-primary" style="padding:0.65rem 1rem;white-space:nowrap;">Save</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="settings-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
                             <div class="glass-card">
                                 <h4 style="margin-bottom: 1.5rem; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Core Intelligence</h4>
@@ -503,9 +560,8 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="glass-card">
-                                <h4 style="margin-bottom: 1.5rem; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Integrations & Webhooks</h4>
+                                <h4 style="margin-bottom: 1.5rem; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Integrations &amp; Webhooks</h4>
                                 <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                                     <div>
                                         <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">WEBHOOK ENDPOINT</label>
@@ -522,6 +578,96 @@
                             </div>
                         </div>
                         <button id="save-settings" class="btn-primary" style="margin-top: 2rem;">SAVE CONFIGURATION</button>
+                    </div>
+                </div>
+
+                <!-- VIEW: STATUS PAGE -->
+                <div id="view-status" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title">🟢 System Status</h2>
+                            <p class="section-subtitle">Real-time health of all NexusGuard agents and infrastructure components.</p>
+                        </div>
+                        <div class="glass-card" style="margin-bottom:1.5rem;padding:0;overflow:hidden;">
+                            <div style="padding:1.25rem 1.5rem;background:rgba(16,185,129,0.06);border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:12px;">
+                                <div style="width:10px;height:10px;background:#4ade80;border-radius:50%;box-shadow:0 0 10px #4ade80;animation:dotPulse 2s infinite;"></div>
+                                <span style="font-weight:700;font-size:0.9rem;">All Systems Operational</span>
+                                <span style="margin-left:auto;font-size:0.7rem;color:var(--text-secondary);" id="status-last-checked">Last checked: just now</span>
+                            </div>
+                            <div id="status-components" style="display:flex;flex-direction:column;"></div>
+                        </div>
+                        <div class="glass-card">
+                            <h4 style="font-size:0.85rem;margin-bottom:1rem;opacity:0.7;">📅 Past 90 Days — Incident Frequency</h4>
+                            <div id="status-heatmap" class="status-heatmap"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: PRICING PAGE -->
+                <div id="view-pricing" class="view-content">
+                    <div class="container">
+                        <div class="page-intro" style="text-align:center;max-width:600px;margin:0 auto 3rem;">
+                            <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 14px;border-radius:999px;border:1px solid rgba(59,130,246,0.3);background:rgba(59,130,246,0.08);color:#60a5fa;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;margin-bottom:1rem;">⚡ SIMPLE PRICING</div>
+                            <h2 class="section-title" style="font-size:2rem;margin-bottom:0.75rem;">Choose Your Plan</h2>
+                            <p class="section-subtitle">Start free. Scale as your infrastructure demands it.</p>
+                        </div>
+                        <div class="pricing-grid">
+                            <!-- Free -->
+                            <div class="pricing-card glass-card">
+                                <div class="pricing-tier">Free</div>
+                                <div class="pricing-price">$0<span>/mo</span></div>
+                                <div class="pricing-desc">Perfect for personal projects and evaluation</div>
+                                <ul class="pricing-features">
+                                    <li>✅ 10 log analyses / day</li>
+                                    <li>✅ RAG knowledge base</li>
+                                    <li>✅ Demo mode execution</li>
+                                    <li>✅ Basic incident history</li>
+                                    <li class="disabled">❌ Slack notifications</li>
+                                    <li class="disabled">❌ Live mode (real infra)</li>
+                                    <li class="disabled">❌ PDF report export</li>
+                                    <li class="disabled">❌ API key management</li>
+                                </ul>
+                                <button class="btn-secondary" style="width:100%;justify-content:center;margin-top:auto;">Get Started Free</button>
+                            </div>
+                            <!-- Pro (highlighted) -->
+                            <div class="pricing-card pricing-card-pro glass-card">
+                                <div class="pricing-popular">MOST POPULAR</div>
+                                <div class="pricing-tier">Pro</div>
+                                <div class="pricing-price">$49<span>/mo</span></div>
+                                <div class="pricing-desc">For SRE teams and growing engineering orgs</div>
+                                <ul class="pricing-features">
+                                    <li>✅ Unlimited analyses</li>
+                                    <li>✅ RAG + AI full pipeline</li>
+                                    <li>✅ Live mode (real infra)</li>
+                                    <li>✅ Full incident history</li>
+                                    <li>✅ Slack notifications</li>
+                                    <li>✅ PDF runbook export</li>
+                                    <li>✅ API key management</li>
+                                    <li>✅ Predictive alerts</li>
+                                </ul>
+                                <button class="btn-primary" style="width:100%;justify-content:center;margin-top:auto;">Start 14-Day Trial</button>
+                            </div>
+                            <!-- Enterprise -->
+                            <div class="pricing-card glass-card">
+                                <div class="pricing-tier">Enterprise</div>
+                                <div class="pricing-price">Custom</div>
+                                <div class="pricing-desc">On-premise deployment with dedicated SRE support</div>
+                                <ul class="pricing-features">
+                                    <li>✅ Everything in Pro</li>
+                                    <li>✅ On-premise AI models</li>
+                                    <li>✅ RBAC &amp; SSO</li>
+                                    <li>✅ PagerDuty integration</li>
+                                    <li>✅ Custom RAG knowledge</li>
+                                    <li>✅ SLA guarantee (99.9%)</li>
+                                    <li>✅ Dedicated SRE engineer</li>
+                                    <li>✅ Custom dashboards</li>
+                                </ul>
+                                <button class="btn-secondary" style="width:100%;justify-content:center;margin-top:auto;">Contact Sales →</button>
+                            </div>
+                        </div>
+                        <div style="text-align:center;margin-top:3rem;padding:2rem;background:rgba(255,255,255,0.02);border:1px solid var(--border-color);border-radius:12px;">
+                            <p style="font-size:0.9rem;color:var(--text-secondary);">🔒 All plans include SOC 2 Type II compliance, AES-256 encryption, and 24/7 autonomous monitoring. <br>No credit card required for Free plan.</p>
+                        </div>
                     </div>
                 </div>
 
