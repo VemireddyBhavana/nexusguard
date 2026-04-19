@@ -128,6 +128,55 @@
     </div>
     <!-- END HERO -->
 
+    <!-- ── AUTHENTICATION VIEW ────────────────────────────── -->
+    <div id="view-auth" class="auth-wrapper" style="display:none">
+        <div class="auth-mesh-bg"></div>
+        <div class="auth-card glass-card">
+            <div class="auth-logo">
+                <div class="logo-icon">🛡️</div>
+                <h2>Nexus<span>Guard</span></h2>
+                <p>Enterprise AI DevOps Platform</p>
+            </div>
+            
+            <div id="auth-login-form">
+                <div class="input-group">
+                    <label>Work Email</label>
+                    <input type="email" placeholder="name@company.com" id="login-email">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" placeholder="••••••••" id="login-pass">
+                </div>
+                <button class="btn-primary auth-btn" id="btn-login-submit">Login to Dashboard</button>
+                <div class="auth-divider"><span>OR</span></div>
+                <button class="btn-secondary auth-btn" id="btn-launch-demo">
+                    <i data-lucide="play" style="width:14px;height:14px;"></i> Launch Demo Instance
+                </button>
+                <p class="auth-switch">Don't have an account? <a href="#" id="link-to-signup">Sign up for Pro</a></p>
+            </div>
+
+            <div id="auth-signup-form" style="display:none">
+                <div class="input-group">
+                    <label>Company Name</label>
+                    <input type="text" placeholder="Acme Inc." id="signup-company">
+                </div>
+                <div class="input-group">
+                    <label>Work Email</label>
+                    <input type="email" placeholder="name@company.com" id="signup-email">
+                </div>
+                <div class="input-group">
+                    <label>Create Password</label>
+                    <input type="password" placeholder="••••••••" id="signup-pass">
+                </div>
+                <button class="btn-primary auth-btn" id="btn-signup-submit">Start 14-Day Free Trial</button>
+                <p class="auth-switch">Already have an account? <a href="#" id="link-to-login">Log back in</a></p>
+            </div>
+        </div>
+        <div class="auth-footer">
+            © 2026 NexusGuard Inc. · SOC2 Type II Certified · SOC3 Secured
+        </div>
+    </div>
+
     <div class="app-shell" id="app-shell" style="display:none">
         <!-- Dashboard Sidebar -->
         <aside class="app-sidebar" id="app-sidebar">

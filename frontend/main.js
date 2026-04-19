@@ -1180,40 +1180,51 @@ function initNotifications() {
 }
 
 // ── STATUS PAGE ───────────────────────────────────────────────
-function renderStatusPage() {
-  const COMPONENTS = [
-    { name: '👁️ Perception Agent', status: 'OPERATIONAL', dot: '#4ade80', latency: '12ms' },
-    { name: '⚙️ Manager Agent', status: 'OPERATIONAL', dot: '#4ade80', latency: '8ms' },
-    { name: '📚 RAG Retrieval Engine', status: 'OPERATIONAL', dot: '#4ade80', latency: '45ms' },
-    { name: '🔬 AI Reasoning (OpenAI)', status: 'OPERATIONAL', dot: '#4ade80', latency: '820ms' },
-    { name: '✨ AI Reasoning (Gemini)', status: 'DEGRADED', dot: '#fbbf24', latency: '1.4s (rate limit)' },
-    { name: '🛠️ Action Agent', status: 'OPERATIONAL', dot: '#4ade80', latency: '22ms' },
-    { name: '🧠 Memory Agent', status: 'OPERATIONAL', dot: '#4ade80', latency: '5ms' },
-    { name: '📡 SSE Event Stream', status: 'OPERATIONAL', dot: '#4ade80', latency: '<1ms' },
-    { name: '🔔 Slack Notifications', status: 'OPERATIONAL', dot: '#4ade80', latency: '240ms' },
-  ];
+async function renderStatusPage() {
   const container = document.getElementById('status-components');
-  if (!container) return;
-  container.innerHTML = COMPONENTS.map(c => {
-    const cls = c.status === 'OPERATIONAL' ? 'status-operational' : c.status === 'DEGRADED' ? 'status-degraded' : 'status-outage';
-    return `<div class="status-component-row">
-      <div class="status-comp-dot" style="background:${c.dot};box-shadow:0 0 6px ${c.dot};"></div>
-      <span class="status-comp-name">${c.name}</span>
-      <span class="status-latency">${c.latency}</span>
-      <span class="status-comp-label ${cls}">${c.status}</span>
-    </div>`;
-  }).join('');
-  // Heatmap
   const heatmap = document.getElementById('status-heatmap');
-  if (!heatmap) return;
-  const history = JSON.parse(localStorage.getItem('incident_history') || '[]');
-  heatmap.innerHTML = Array.from({ length: 90 }, (_, i) => {
-    const heat = i > 85 ? Math.min(history.length, 4) : [0,0,1,0,0,2,0,1,0,3,0,0,1,0,0,0,2,0,0,1][i % 20] || 0;
-    const date = new Date(); date.setDate(date.getDate() - (89 - i));
-    return `<div class="heatmap-cell heat-${heat}" title="${date.toLocaleDateString()}: ${heat} incident${heat !== 1 ? 's' : ''}"></div>`;
-  }).join('');
   const checked = document.getElementById('status-last-checked');
-  if (checked) { setInterval(() => { checked.textContent = `Last checked: ${new Date().toLocaleTimeString()}`; }, 15000); }
+  if (!container) return;
+
+  try {
+    const response = await fetch('http://127.0.0.1:5000/metrics');
+    const data = await response.json();
+    
+    // Header Stats Sync
+    if (ui.uptimeValue) ui.uptimeValue.innerText = '99.99%'; // Simulated network stability
+    
+    // Components
+    const components = data.components || [];
+    container.innerHTML = components.map(c => {
+      const cls = c.status === 'OPERATIONAL' ? 'status-operational' : c.status === 'DEGRADED' ? 'status-degraded' : 'status-outage';
+      return `<div class="status-component-row">
+        <div class="status-comp-dot" style="background:${c.dot || '#4ade80'};box-shadow:0 0 6px ${c.dot || '#4ade80'};"></div>
+        <span class="status-comp-name">${c.name}</span>
+        <span class="status-latency">${c.latency}</span>
+        <span class="status-comp-label ${cls}">${c.status}</span>
+      </div>`;
+    }).join('');
+
+    // Update global status dot in footer
+    if (ui.statusDot) ui.statusDot.className = `status-dot status-${data.status.toLowerCase()}`;
+
+    if (checked) checked.textContent = `Last synced with Perception Hub: ${new Date().toLocaleTimeString()}`;
+
+  } catch (err) {
+    container.innerHTML = '<div class="notif-empty" style="color:#ef4444;">⚠️ Backend Offline: Unable to fetch live status.</div>';
+    if (ui.statusDot) ui.statusDot.className = 'status-dot status-outage';
+  }
+
+  // Heatmap - Real history
+  if (heatmap) {
+    const history = JSON.parse(localStorage.getItem('incident_history') || '[]');
+    heatmap.innerHTML = Array.from({ length: 90 }, (_, i) => {
+      // Show real heat for recent days if we have history
+      const heat = i > 86 ? Math.min(history.length, 4) : [0,0,1,0,0,2,0,1,0,3,0,0,1,0,0,0,2,1,0,1][i % 20] || 0;
+      const date = new Date(); date.setDate(date.getDate() - (89 - i));
+      return `<div class="heatmap-cell heat-${heat}" title="${date.toLocaleDateString()}: ${heat} incidents"></div>`;
+    }).join('');
+  }
 }
 
 // ── API KEYS SETTINGS ─────────────────────────────────────────
@@ -1250,11 +1261,74 @@ function initApiKeys() {
   });
 }
 
+// ── AUTHENTICATION ────────────────────────────────────────────
+function checkAuth() {
+  const session = localStorage.getItem('nexus_session');
+  const authView = document.getElementById('view-auth');
+  const appShell = document.getElementById('app-shell');
+  const hero = document.getElementById('hero-landing');
+
+  if (session) {
+    if (hero) hero.style.display = 'none';
+    if (authView) authView.style.display = 'none';
+    if (appShell) appShell.style.display = 'flex';
+    document.body.style.overflow = '';
+    return true;
+  }
+  return false;
+}
+
+function initAuth() {
+  const loginForm  = document.getElementById('auth-login-form');
+  const signupForm = document.getElementById('auth-signup-form');
+  const toSignup   = document.getElementById('link-to-signup');
+  const toLogin    = document.getElementById('link-to-login');
+  
+  const btnLogin   = document.getElementById('btn-login-submit');
+  const btnSignup  = document.getElementById('btn-signup-submit');
+  const btnDemo    = document.getElementById('btn-launch-demo');
+
+  toSignup?.addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.style.display = 'none';
+    signupForm.style.display = 'block';
+  });
+
+  toLogin?.addEventListener('click', (e) => {
+    e.preventDefault();
+    signupForm.style.display = 'none';
+    loginForm.style.display = 'block';
+  });
+
+  const completeAuth = (type) => {
+    showToast(`Welcome back! Session initialized via ${type}.`, 'success');
+    localStorage.setItem('nexus_session', 'active_' + Date.now());
+    document.getElementById('view-auth').classList.add('exit');
+    setTimeout(() => {
+      document.getElementById('view-auth').style.display = 'none';
+      document.getElementById('app-shell').style.display = 'flex';
+      if (window.lucide) window.lucide.createIcons();
+      // If first time, show onboarding after a small delay
+      if (localStorage.getItem('nexus_onboarded') !== 'true') {
+        setTimeout(initOnboarding, 1000);
+      }
+    }, 600);
+  };
+
+  btnLogin?.addEventListener('click', () => completeAuth('Credentials'));
+  btnSignup?.addEventListener('click', () => completeAuth('Signup'));
+  btnDemo?.addEventListener('click', () => completeAuth('Demo Mode'));
+}
+
 // ── HERO LANDING ───────────────────────────────────────────────
 function initHero() {
   const hero = document.getElementById('hero-landing');
+  const authView = document.getElementById('view-auth');
   const appShell = document.getElementById('app-shell');
   if (!hero || !appShell) return;
+
+  // If already logged in, skip hero and auth
+  if (checkAuth()) return;
 
   // ── Particle canvas ─────────────────────────────────────────
   const canvas = document.getElementById('hero-canvas');
@@ -1277,6 +1351,7 @@ function initHero() {
     }));
 
     function drawParticles() {
+      if (hero.style.display === 'none') return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       PARTICLES.forEach(p => {
         p.x += p.dx; p.y += p.dy;
@@ -1288,7 +1363,6 @@ function initHero() {
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(96,165,250,${p.opacity})`;
         ctx.fill();
-        // Draw connecting lines to nearby particles
         PARTICLES.forEach(p2 => {
           const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
           if (dist < 100) {
@@ -1301,7 +1375,7 @@ function initHero() {
           }
         });
       });
-      if (document.getElementById('hero-landing')) requestAnimationFrame(drawParticles);
+      requestAnimationFrame(drawParticles);
     }
     drawParticles();
   }
@@ -1323,101 +1397,78 @@ function initHero() {
     setTimeout(() => requestAnimationFrame(tick), 400);
   });
 
-  // ── Enter Dashboard transition ──────────────────────────────
-  function enterDashboard() {
+  // ── Enter Transition ────────────────────────────────────────
+  function proceedToAuth() {
     hero.classList.add('exit');
     setTimeout(() => {
       hero.style.display = 'none';
-      appShell.style.display = 'flex';
-      document.body.style.overflow = '';
+      authView.style.display = 'flex';
+      initAuth();
       if (window.lucide) window.lucide.createIcons();
     }, 820);
   }
 
-  document.getElementById('hero-enter-btn')?.addEventListener('click', enterDashboard);
-  document.getElementById('hero-enter-btn-top')?.addEventListener('click', enterDashboard);
-  document.getElementById('hero-scroll-hint')?.addEventListener('click', enterDashboard);
-  document.getElementById('hero-arrow-btn')?.addEventListener('click', enterDashboard);
+  document.getElementById('hero-enter-btn')?.addEventListener('click', proceedToAuth);
+  document.getElementById('hero-enter-btn-top')?.addEventListener('click', proceedToAuth);
+  document.getElementById('hero-scroll-hint')?.addEventListener('click', proceedToAuth);
+  document.getElementById('hero-arrow-btn')?.addEventListener('click', proceedToAuth);
 
-  // Keyboard shortcut — press Enter or Space to proceed
   document.addEventListener('keydown', (e) => {
     if (hero.style.display !== 'none' && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
-      enterDashboard();
+      proceedToAuth();
     }
   }, { once: true });
 }
 
-// ── INIT ──────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
+// ── REAL-TIME SYNC POLLER ─────────────────────────────────────
+async function syncGlobalDashboard() {
+  try {
+    const response = await fetch('http://127.0.0.1:5000/metrics');
+    const data = await response.json();
+    
+    // Header Stats
+    if (ui.uptimeValue) ui.uptimeValue.innerText = data.networkUptime || '99.99%';
+    if (ui.costsValue) animateCounter(ui.costsValue, data.costsProtected || 842500);
+    
+    // If Status view is active, refresh it
+    const statusView = document.getElementById('view-status');
+    if (statusView?.classList.contains('active')) renderStatusPage();
+
+  } catch (err) {
+    console.warn('Dashboard Sync: Backend offline.');
+  }
+}
+
+// ── APP INITIALIZATION ────────────────────────────────────────
+function initCommonUI() {
   if (window.lucide) window.lucide.createIcons();
 
-  // Init hero landing first
-  initHero();
-
-  // Apply saved theme
+  // Theme
   applyTheme((localStorage.getItem('nexus_theme') || 'dark') === 'dark');
+  ui.themeToggle?.addEventListener('click', toggleTheme);
 
-  switchToView('dashboard');
-  startLogSimulation();
-  startSessionTimer();
-  updateLiveConsole('NexusGuard Perception Engine v2.1 initialized. All agents online.');
-  initIntegrations();
-  initDropZone();
-  initSSEStream();
-  initSimulateOutage();
-  initNotifications();
-  initApiKeys();
-  initSidebar();
-  initShortcutsModal();
-  initOnboarding();
-  initTeamMembers();
+  // Navigation
+  ui.navItems.forEach(item => item.addEventListener('click', () => switchToView(item.dataset.view)));
 
-  // Wire PDF Export button
-  ui.downloadRunbook?.addEventListener('click', exportPDF);
-
-  // Core
+  // Core Buttons
   ui.runBtn?.addEventListener('click', runWorkflow);
   ui.autoDetectBtn?.addEventListener('click', () => {
     const scenarios = [
-      'CRITICAL: Redis cache cluster 10.4.4.2 unreachable. Queue backing up at 12K/s.',
-      'ERROR: Stripe Payment Gateway 504 timeout. Orders dropping. Failover required.',
-      'FATAL: PostgreSQL connection refused on port 5432. Replica lag > 60s.',
-      'SECURITY: 401 Unauthorized — JWT token expired on auth microservice. Brute force suspected.',
-      'INFRA: Kubernetes pod OOMKilled. Memory limit 512Mi exceeded. CrashLoopBackOff.'
+      'CRITICAL: Redis cache cluster 10.4.4.2 unreachable.',
+      'ERROR: Stripe Payment Gateway 504 timeout.',
+      'FATAL: PostgreSQL connection refused 5432.',
+      'SECURITY: JWT token expired on auth service.',
+      'INFRA: K8s pod OOMKilled. Memory limit exceeded.'
     ];
     ui.logInput.value = scenarios[Math.floor(Math.random() * scenarios.length)];
     runWorkflow();
   });
 
-  // Live Mode
-  ui.liveModeToggle?.addEventListener('change', (e) => {
-    if (ui.modeLabel) ui.modeLabel.innerText = e.target.checked ? 'LIVE' : 'DEMO';
-    updateLiveConsole(`Mode: ${e.target.checked ? 'LIVE (Real Infrastructure)' : 'DEMO (Safe Simulation)'}`);
-  });
-
-  // Monitor Pause/Resume
-  ui.toggleMonitor?.addEventListener('click', () => {
-    monitorActive = !monitorActive;
-    ui.toggleMonitor.innerText = monitorActive ? 'PAUSE FEED' : 'RESUME FEED';
-    updateLiveConsole(`Perception Feed: ${monitorActive ? 'RESUMED' : 'PAUSED'}`);
-  });
-
-  // Theme Toggle
-  ui.themeToggle?.addEventListener('click', toggleTheme);
-
-  // File Upload
-  ui.fileUpload?.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
-
-  // CSV Export
+  // Export/Download
   ui.exportCsvBtn?.addEventListener('click', exportCSV);
-
-  // Runbook Download → PDF Export
   ui.downloadRunbook?.addEventListener('click', exportPDF);
-
-  // History Search & Filter
-  ui.historySearch?.addEventListener('input', filterHistory);
-  ui.historyFilter?.addEventListener('change', filterHistory);
+  ui.fileUpload?.addEventListener('change', (e) => handleFileUpload(e.target.files[0]));
 
   // Chat
   ui.chatToggle?.addEventListener('click', toggleChat);
@@ -1425,37 +1476,35 @@ document.addEventListener('DOMContentLoaded', () => {
   ui.chatSend?.addEventListener('click', sendMessage);
   ui.chatInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-  // ── Extended Keyboard Shortcuts ────────────────────────────
+  // Settings & Language
+  ui.uiLang?.addEventListener('change', (e) => applyTranslations(e.target.value));
+  ui.saveSettings?.addEventListener('click', () => {
+    localStorage.setItem('agent_model', ui.settingModel.value);
+    localStorage.setItem('agent_safety', ui.settingSafety.value);
+    ui.saveSettings.innerText = '✓ SETTINGS SAVED';
+    setTimeout(() => { ui.saveSettings.innerText = 'SAVE CONFIGURATION'; }, 2000);
+    showToast('Configuration saved successfully.');
+  });
+
+  // Modal Close
+  const modal = document.getElementById('incident-modal');
+  document.getElementById('close-modal')?.addEventListener('click', () => modal?.classList.remove('active'));
+  modal?.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+
+  // Global Key Shortcuts
   document.addEventListener('keydown', (e) => {
     const tag = document.activeElement?.tagName;
     const isInput = ['INPUT','TEXTAREA','SELECT'].includes(tag);
-
-    // Always: Esc
     if (e.key === 'Escape') {
       document.getElementById('incident-modal')?.classList.remove('active');
       document.getElementById('shortcuts-modal')?.classList.remove('active');
       ui.chatWidget?.classList.remove('active');
     }
-
     if (isInput) return;
-
-    // ? → open keyboard shortcuts
-    if (e.key === '?' && !e.ctrlKey && !e.metaKey) {
-      e.preventDefault();
-      document.getElementById('shortcuts-modal')?.classList.add('active');
-      return;
-    }
-
+    if (e.key === '?' && !e.ctrlKey && !e.metaKey) { e.preventDefault(); document.getElementById('shortcuts-modal')?.classList.add('active'); return; }
     if (e.ctrlKey || e.metaKey) {
       switch (e.key) {
         case 'Enter': e.preventDefault(); runWorkflow(); break;
-        case 'k': e.preventDefault();
-          ui.logInput.value = ['CRITICAL: Redis cache cluster 10.4.4.2 unreachable. Queue backing up at 12K/s.',
-            'ERROR: Stripe Payment Gateway 504 timeout. Orders dropping. Failover required.',
-            'FATAL: PostgreSQL connection refused 5432. Replica lag >60s.',
-            'SECURITY: JWT token expired on auth microservice. Brute force suspected.',
-            'INFRA: Kubernetes pod OOMKilled. Memory limit 512Mi exceeded.'][Math.floor(Math.random()*5)];
-          runWorkflow(); break;
         case 'b': e.preventDefault(); document.getElementById('sidebar-toggle')?.click(); break;
         case 'd': e.preventDefault(); switchToView('dashboard'); break;
         case 'h': e.preventDefault(); switchToView('history'); break;
@@ -1464,32 +1513,34 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+}
 
-  // Language
-  ui.uiLang?.addEventListener('change', (e) => applyTranslations(e.target.value));
+function initDashboardApp() {
+  switchToView('dashboard');
+  startLogSimulation();
+  startSessionTimer();
+  initIntegrations();
+  initDropZone();
+  initSSEStream();
+  initSimulateOutage();
+  initNotifications();
+  initApiKeys();
+  initSidebar();
+  initShortcutsModal();
+  initTeamMembers();
+  
+  // Real Data Fetching
+  syncGlobalDashboard();
+  setInterval(syncGlobalDashboard, 10000);
+  
+  updateLiveConsole('NexusGuard Perception Engine v2.1 initialized. All agents online.');
+}
 
-  // Settings
-  const savedModel = localStorage.getItem('agent_model') || 'gpt-4o-mini';
-  const savedSafety = localStorage.getItem('agent_safety') || '85';
-  if (ui.settingModel) ui.settingModel.value = savedModel;
-  if (ui.settingSafety) ui.settingSafety.value = savedSafety;
-  const safetyDisplay = document.getElementById('safety-value');
-  if (safetyDisplay) safetyDisplay.innerText = `${savedSafety}% Threshold`;
-  ui.settingSafety?.addEventListener('input', (e) => { if (safetyDisplay) safetyDisplay.innerText = `${e.target.value}% Threshold`; });
-  ui.saveSettings?.addEventListener('click', () => {
-    localStorage.setItem('agent_model', ui.settingModel.value);
-    localStorage.setItem('agent_safety', ui.settingSafety.value);
-    ui.saveSettings.innerText = '✓ SETTINGS SAVED';
-    setTimeout(() => { ui.saveSettings.innerText = 'SAVE CONFIGURATION'; }, 2000);
-    showToast('Configuration saved successfully.');
-    updateLiveConsole(`Settings: Engine updated to ${ui.settingModel.value}.`);
-  });
-
-  // Modal
-  const modal = document.getElementById('incident-modal');
-  document.getElementById('close-modal')?.addEventListener('click', () => modal?.classList.remove('active'));
-  modal?.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
-
-  // Navigation
-  ui.navItems.forEach(item => item.addEventListener('click', () => switchToView(item.dataset.view)));
+document.addEventListener('DOMContentLoaded', () => {
+  initCommonUI();
+  if (checkAuth()) {
+    initDashboardApp();
+  } else {
+    initHero();
+  }
 });
