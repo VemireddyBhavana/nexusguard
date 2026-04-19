@@ -297,10 +297,10 @@ cp .env.example .env
 Open `.env` and fill in your keys:
 
 ```env
-PORT=5000
-OPENAI_API_KEY=sk-...          # Get from platform.openai.com
-GEMINI_API_KEY=AIza...         # Get from aistudio.google.com
-SLACK_WEBHOOK_URL=https://...  # Optional: for Slack notifications
+PORT                   # Get your own port number
+OPENAI_API_KEY         # Get from platform.openai.com
+GEMINI_API_KEY         # Get from aistudio.google.com
+SLACK_WEBHOOK_URL       # Optional: for Slack notifications
 ```
 
 Install dependencies and start:
