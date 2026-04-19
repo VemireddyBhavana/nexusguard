@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusGuard — Professional AI DevOps Platform</title>
+    <link rel="stylesheet" href="./style.css">
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.407.0/dist/umd/lucide.min.js"></script>
+
+</head>
+
+<body>
+    <div class="app-shell">
+        <!-- Dashboard Sidebar -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">NexusGuard <span class="fire-icon"></span></div>
+                <div class="version">v2.0 PRO</div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span data-i18n="NAV_DASHBOARD">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-view="history">
+                    <i data-lucide="history"></i>
+                    <span data-i18n="NAV_HISTORY">Incident History</span>
+                </a>
+                <a href="#" class="nav-item" data-view="analytics">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span data-i18n="NAV_ANALYTICS">Analytics</span>
+                </a>
+                <a href="#" class="nav-item" data-view="settings">
+                    <i data-lucide="settings"></i>
+                    <span data-i18n="NAV_SETTINGS">Settings</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(55, 65, 81, 0.4); border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.6rem; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Execution Mode</div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="live-mode-toggle">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="mode-label" style="font-size: 0.65rem; color: var(--text-secondary);">DEMO</span>
+                    </div>
+                </div>
+                <div class="user-block">
+                    <div class="avatar">AD</div>
+                    <div class="user-info">
+                        <div class="name">Admin User</div>
+                        <div class="role" data-i18n="USER_ROLE">System Lead</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Application Content -->
+        <main class="app-main">
+            <header class="main-header">
+                <div class="header-breadcrumb">
+                    <span id="view-title" data-i18n="NAV_DASHBOARD">Dashboard</span>
+                </div>
+                <div class="header-actions">
+                    <div class="lang-selector">
+                        <select id="ui-lang">
+                            <option value="en">English (US)</option>
+                            <option value="hi">हिन्दी (India)</option>
+                            <option value="es">Español (Global)</option>
+                            <option value="ja">日本語 (Japan)</option>
+                        </select>
+                    </div>
+                    <div class="notification-bell">
+                        <i data-lucide="bell"></i>
+                        <span class="notification-count">2</span>
+                    </div>
+                    <button id="theme-toggle" class="btn-icon" title="Toggle Theme">
+                        <i data-lucide="sun" style="width:16px;height:16px;"></i>
+                    </button>
+                </div>
+            </header>
+
+            <div class="view-viewport">
+                <!-- VIEW: DASHBOARD -->
+                <div id="view-dashboard" class="view-content active">
+                    <div class="container">
+                        <div class="page-intro">
+                            <p class="subtitle" id="ui-subtitle" data-i18n="SUBTITLE">Autonomous AI Guardian for
+                                Predictive DevOps</p>
+                            <span class="badge badge-live">
+                                <i data-lucide="zap" style="width: 12px; height: 12px; margin-right: 4px;"></i>
+                                <span data-i18n="BADGE_PROTECTION">Enterprise Protection Enabled</span>
+                            </span>
+                        </div>
+
+                        <!-- Live System Monitor -->
+                        <section class="glass-card monitor-section">
+                            <div class="monitor-header">
+                                <div class="monitor-brand">
+                                    <div class="gauge-preview">
+                                        <svg class="health-gauge" viewBox="0 0 36 36">
+                                            <path class="gauge-bg"
+                                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                            <path id="gauge-progress" class="gauge-fill" stroke-dasharray="100, 100"
+                                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                            <text id="gauge-text" x="18" y="20.35" class="gauge-percentage">100%</text>
+                                        </svg>
+                                    </div>
+                                    <div class="monitor-titles">
+                                        <div class="monitor-main-title">
+                                            <div class="pulse-dot"></div>
+                                            <span data-i18n="MONITOR_TITLE">System Live Feed — Node_01</span>
+                                        </div>
+                                        <div id="predictive-label" class="monitor-sub-title"
+                                            data-i18n="PERCEPTION_ACTIVE">PERCEPTION: ACTIVE</div>
+                                    </div>
+                                </div>
+                                <div id="monitor-status" class="badge severity-low" data-i18n="STATUS_HEALTHY">Status:
+                                    Healthy</div>
+                            </div>
+                            <div id="monitor-console" class="console-body"></div>
+                            <div class="monitor-footer">
+                                <div class="footer-left">
+                                    <div id="eco-score" class="eco-badge">
+                                        <i data-lucide="leaf"></i>
+                                        <span><span data-i18n="GREEN_OPS">GREEN OPS</span>: <span
+                                                id="eco-value">100</span>%</span>
+                                    </div>
+                                    <div class="integration-hub">
+                                        <div id="int-github" class="int-badge" title="GitHub"><i data-lucide="github"></i></div>
+                                        <div id="int-slack" class="int-badge" title="Slack"><i data-lucide="slack"></i></div>
+                                        <div id="int-cloud" class="int-badge" title="AWS Cloud"><i data-lucide="cloud"></i></div>
+                                    </div>
+                                </div>
+                                <button id="toggle-monitor" class="btn-toggle" data-i18n="BTN_PAUSE">PAUSE FEED</button>
+                            </div>
+                        </section>
+
+                        <!-- Input Area -->
+                        <div class="interaction-layout">
+
+                            <div class="glass-card input-section">
+                                <label class="label-heading" data-i18n="INPUT_HEADING">Intelligence Input</label>
+                                <textarea id="log-input" data-i18n-placeholder="INPUT_PLACEHOLDER"
+                                    placeholder="Enter logs or tap for auto-detect..."></textarea>
+                                <div class="input-actions">
+                                    <select id="log-source">
+                                        <option value="server" data-i18n="SOURCE_SERVER">Server Logs</option>
+                                        <option value="app" data-i18n="SOURCE_APP">Application</option>
+                                    </select>
+                                    <button id="auto-detect-btn" class="btn-secondary">
+                                        <i data-lucide="search"></i> <span data-i18n="BTN_AUTO">Auto-Detect</span>
+                                    </button>
+                                    <button id="run-btn" class="btn-primary">
+                                        <i data-lucide="play"></i> <span data-i18n="BTN_RUN">Run Agent</span>
+                                    </button>
+                                </div>
+                                <div id="drop-zone" class="drop-zone">
+                                    <i data-lucide="upload-cloud" style="width:20px;height:20px;opacity:0.5;"></i>
+                                    <span style="font-size:0.75rem;color:var(--text-secondary);">Drop <code>.log</code> / <code>.txt</code> file here or <label for="file-upload" style="color:var(--accent-primary);cursor:pointer;text-decoration:underline;">browse</label></span>
+                                    <input type="file" id="file-upload" accept=".log,.txt,.out" style="display:none">
+                                </div>
+                            </div>
+
+                            <section class="workflow-steps">
+                                <div class="step" id="step-perception">
+                                    <div class="step-icon"><i data-lucide="eye"></i></div><span class="step-label"
+                                        data-i18n="STEP_PERCEPTION">Perception</span>
+                                </div>
+                                <div class="step" id="step-manager">
+                                    <div class="step-icon"><i data-lucide="brain"></i></div><span class="step-label"
+                                        data-i18n="STEP_MANAGER">Manager</span>
+                                </div>
+                                <div class="step" id="step-research">
+                                    <div class="step-icon"><i data-lucide="search"></i></div><span class="step-label"
+                                        data-i18n="STEP_RESEARCH">Research</span>
+                                </div>
+                                <div class="step" id="step-fix">
+                                    <div class="step-icon"><i data-lucide="wrench"></i></div><span class="step-label"
+                                        data-i18n="STEP_FIX">Fix</span>
+                                </div>
+                                <div class="step" id="step-action">
+                                    <div class="step-icon"><i data-lucide="rocket"></i></div><span class="step-label"
+                                        data-i18n="STEP_ACTION">Action</span>
+                                </div>
+                            </section>
+                        </div>
+
+                        <!-- Predictive Alert Banner -->
+                        <div id="predictive-alert" class="predictive-alert" style="display:none;"></div>
+
+                        <!-- Output Analysis -->
+                        <div class="output-grid" id="output-grid">
+                            <div class="glass-card output-card" id="card-issue">
+                                <div class="card-header"><i data-lucide="alert-circle"></i> <h3 data-i18n="TITLE_ISSUE">Detected Issue</h3> <span id="severity-badge" class="badge"></span></div>
+                                <div class="output-content">
+                                    <div id="content-issue" class="main-val" data-i18n="MSG_PENDING">Analysis pending...</div>
+                                    <div id="content-evidence" class="evidence"></div>
+                                    <div id="finance-impact-box" class="impact-tag" style="display:none">
+                                        <span data-i18n="TITLE_IMPACT">Risk Exposure</span>: <span id="content-finance">Calculating...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="glass-card output-card" id="card-root-cause">
+                                <div class="card-header"><i data-lucide="activity"></i> <h3 data-i18n="TITLE_CAUSE">Root Cause</h3></div>
+                                <div class="output-content" id="content-root-cause" data-i18n="MSG_WAITING">Waiting for insights...</div>
+                            </div>
+                            
+                            <div class="glass-card output-card" id="card-suggestion">
+                                <div class="card-header"><i data-lucide="lightbulb"></i> <h3 data-i18n="TITLE_FIX">Suggested Fix</h3></div>
+                                <div class="output-content" id="content-suggestion" data-i18n="MSG_REPAIR">Analytical repair in progress...</div>
+                            </div>
+
+                            <div class="glass-card output-card" id="card-reasoning" style="display:none">
+                                <div class="card-header"><i data-lucide="layers"></i> <h3 data-i18n="TITLE_REASONING">Multi-Agent Reasoning Chain</h3></div>
+                                <div class="output-content" id="content-reasoning"></div>
+                            </div>
+
+                            <div class="glass-card output-card" id="card-decision">
+                                <div class="card-header"><i data-lucide="brain-circuit"></i> <h3 data-i18n="TITLE_DECISION">Agent Decision Details</h3></div>
+                                <div class="output-content" id="content-decision">
+                                    <div id="decision-engine" class="impact-tag" style="background: rgba(59, 130, 246, 0.1); color: var(--accent-primary); border-color: var(--accent-primary);">ANALYSIS: SELECTING...</div>
+                                    <div id="knowledge-badge" class="impact-tag" style="display:none; background: rgba(168, 85, 247, 0.1); color: #a855f7; border-color: #a855f7;">🧠 Knowledge Base Used (RAG Enabled)</div>
+                                    <div id="safety-tag" class="impact-tag" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: #f59e0b;">🛡️ Safety Audit: <span id="content-safety">98%</span></div>
+                                    <div id="decision-text" style="font-size: 0.8rem; margin-top: 1rem; opacity: 0.8;">Weighting autonomous resolution paths...</div>
+                                    
+                                    <div id="relevant-issues-container" style="display:none; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                                        <div style="font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 8px;">Relevant Known Issues:</div>
+                                        <div id="relevant-issues-list" style="display: flex; flex-wrap: wrap; gap: 6px;"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-card output-card" id="card-actions">
+                                <div class="card-header"><i data-lucide="terminal"></i> <h3 data-i18n="TITLE_PATH">Resolution Path</h3></div>
+                                <div class="output-content" id="content-actions" data-i18n="MSG_READY">System ready.</div>
+                                <button id="download-runbook-btn" class="btn-secondary" style="margin-top:0.75rem;display:none;width:100%;justify-content:center;">
+                                    <i data-lucide="download" style="width:14px;height:14px;"></i> Download Runbook (.md)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Live Agent Console -->
+                        <div class="glass-card" style="margin-top: 2rem; padding: 1.5rem;">
+                            <div class="card-header" style="border:none; margin-bottom: 0.5rem;"><i data-lucide="monitor"></i> <h3 data-i18n="MONITOR_TITLE">LIVE AGENT CONSOLE — MONITOR_01</h3></div>
+                            <div id="live-console" class="console-body" style="height: 150px; font-size: 0.75rem;"></div>
+                        </div>
+
+                        <!-- Secondary Alerts -->
+                        <div id="secondary-issues-container" class="glass-card secondary-box" style="display:none">
+                            <h4 class="secondary-title" data-i18n="TITLE_SECONDARY">Cross-Service Anomalies Found</h4>
+                            <div id="secondary-issues-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: HISTORY -->
+                <div id="view-history" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title" data-i18n="TITLE_LEDGER">Incident Ledger</h2>
+                            <p class="section-subtitle" data-i18n="SUBTITLE_LEDGER">Persistent audit trail of all
+                                autonomous interventions across the global infrastructure.</p>
+                        </div>
+
+                        <div class="history-controls">
+                            <input type="text" id="history-search" class="search-input" placeholder="Search by ID or issue...">
+                            <select id="history-filter" class="btn-secondary" style="padding:0.55rem 1rem;">
+                                <option value="all">All Severities</option>
+                                <option value="critical">Critical</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                            <button id="export-csv-btn" class="btn-secondary">
+                                <i data-lucide="download" style="width:14px;height:14px;"></i> Export CSV
+                            </button>
+                        </div>
+
+                        <div class="glass-card table-wrapper">
+                            <table id="history-table">
+                                <thead>
+                                    <tr>
+                                        <th data-i18n="TH_TIMESTAMP">TIMESTAMP</th>
+                                        <th data-i18n="TH_ID">INCIDENT ID</th>
+                                        <th data-i18n="TH_ISSUE">ISSUE</th>
+                                        <th data-i18n="TH_SEVERITY">SEVERITY</th>
+                                        <th data-i18n="TH_MTTR">MTTR</th>
+                                        <th data-i18n="TH_STATUS">ACTION STATUS</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: ANALYTICS -->
+                <div id="view-analytics" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title" data-i18n="NAV_ANALYTICS">Global Analytics</h2>
+                            <p class="section-subtitle" data-i18n="SUBTITLE_ANALYTICS">Real-time performance metrics and
+                                ROI generated by NexusGuard AI.</p>
+                        </div>
+
+                        <div class="metrics-grid">
+                            <div class="glass-card metric-card">
+                                <span class="metric-label" data-i18n="METRIC_UPTIME">NETWORK UPTIME</span>
+                                <div class="metric-value" id="uptime-value">99.998%</div>
+                            </div>
+                            <div class="glass-card metric-card">
+                                <span class="metric-label" data-i18n="METRIC_COSTS">COSTS PROTECTED</span>
+                                <div class="metric-value" id="costs-value">$842,500</div>
+                            </div>
+                            <div class="glass-card metric-card highlight">
+                                <span class="metric-label" data-i18n="METRIC_FIXES">AUTONOMOUS FIXES</span>
+                                <div class="metric-value" id="incidents-count">0</div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card chart-container">
+                            <div class="chart-header">
+                                <h3 class="chart-title" data-i18n="CHART_TITLE">Incident Mitigation Trend (Weekly)</h3>
+                                <div class="chart-period" data-i18n="CHART_PERIOD">Last 7 Days</div>
+                            </div>
+                            <div class="canvas-box">
+                                <canvas id="analyticsChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="charts-sub-grid">
+                            <div class="glass-card chart-container">
+                                <div class="chart-header">
+                                    <h3 class="chart-title">Severity Distribution</h3>
+                                </div>
+                                <div class="canvas-box" style="height:220px;">
+                                    <canvas id="severityChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="glass-card chart-container">
+                                <div class="chart-header">
+                                    <h3 class="chart-title">MTTR Trend (Last 6)</h3>
+                                    <div class="chart-period">Mean Time To Resolve</div>
+                                </div>
+                                <div class="canvas-box" style="height:220px;">
+                                    <canvas id="mttrChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: SETTINGS -->
+                <div id="view-settings" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title" data-i18n="NAV_SETTINGS">Agent Settings</h2>
+                            <p class="section-subtitle" data-i18n="SUBTITLE_SETTINGS">Configure AI thresholds,
+                                notification webhooks, and security guardrails.</p>
+                        </div>
+                        
+                        <div class="settings-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem;">
+                            <div class="glass-card">
+                                <h4 style="margin-bottom: 1.5rem; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Core Intelligence</h4>
+                                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                                    <div>
+                                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">PRIMARY REASONING ENGINE</label>
+                                        <select id="setting-model" class="btn-secondary" style="width: 100%; border-radius: 8px;">
+                                            <option value="gpt-4o-mini">OpenAI GPT-4o Mini (Ultra-Fast)</option>
+                                            <option value="gemini-1.5-flash">Google Gemini 1.5 Flash (Efficient)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">SKEPTICISM LEVEL (SAFETY AUDIT)</label>
+                                        <input type="range" id="setting-safety" min="0" max="100" value="85" style="width: 100%; accent-color: var(--accent-primary);">
+                                        <div style="display: flex; justify-content: space-between; font-size: 0.6rem; margin-top: 0.5rem; opacity: 0.7;">
+                                            <span>PERMISSIVE</span>
+                                            <span id="safety-value">85% Threshold</span>
+                                            <span>MAX PROTECTION</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="glass-card">
+                                <h4 style="margin-bottom: 1.5rem; font-size: 0.9rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">Integrations & Webhooks</h4>
+                                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                                    <div>
+                                        <label style="display: block; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">WEBHOOK ENDPOINT</label>
+                                        <input type="text" value="http://localhost:5000/webhook" style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 8px; color: white; font-size: 0.8rem;">
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                                        <span style="font-size: 0.8rem;">Self-Healing Auto-Confirm</span>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" checked>
+                                            <span class="slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="save-settings" class="btn-primary" style="margin-top: 2rem;">SAVE CONFIGURATION</button>
+                    </div>
+                </div>
+
+            <!-- Global Status Bar -->
+            <footer class="app-footer">
+                <div class="status-indicator">
+                    <div class="status-dot" id="status-dot"></div>
+                    <span class="status-text" id="status-text" data-i18n="STATUS_IDLE">Perception Engine: Waiting for
+                        logs...</span>
+                </div>
+                <div class="session-timer"><span data-i18n="SESSION">Session</span>: 02:44:12</div>
+            </footer>
+        </main>
+    </div>
+
+    <!-- Interactive Agent Chat Widget -->
+    <div id="chat-widget" class="chat-widget">
+        <div class="chat-header">
+            <div class="agent-status">
+                <div class="status-pulse"></div>
+                <span>NexusGuard Agent v2.1</span>
+            </div>
+            <button id="chat-close" class="chat-close-btn"><i data-lucide="x"></i></button>
+        </div>
+        <div id="chat-messages" class="chat-messages">
+            <div class="message agent">
+                Hello! I am the NexusGuard Reasoning Agent. I have real-time access to your system metrics. How can I assist your SRE operations today?
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ask about system status..." autocomplete="off">
+            <button id="chat-send" class="chat-send-btn"><i data-lucide="send"></i></button>
+        </div>
+    </div>
+
+    <!-- Chat Toggle Button -->
+    <button id="chat-toggle" class="chat-toggle">
+        <i data-lucide="message-square"></i>
+        <span class="chat-pulse"></span>
+    </button>
+
+    <div id="incident-modal" class="modal-overlay">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Incident Details</h3>
+                <button class="modal-close" id="close-modal">&times;</button>
+            </div>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <div id="toast-container" class="toast-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.lucide) lucide.createIcons();
+        });
+    </script>
+
+</html>
