@@ -862,9 +862,110 @@ function initSSEStream() {
   }, 2000);
 }
 
+// ── HERO LANDING ───────────────────────────────────────────────
+function initHero() {
+  const hero = document.getElementById('hero-landing');
+  const appShell = document.getElementById('app-shell');
+  if (!hero || !appShell) return;
+
+  // ── Particle canvas ─────────────────────────────────────────
+  const canvas = document.getElementById('hero-canvas');
+  const ctx = canvas?.getContext('2d');
+  if (canvas && ctx) {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    const PARTICLES = Array.from({ length: 80 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.3,
+      dx: (Math.random() - 0.5) * 0.4,
+      dy: (Math.random() - 0.5) * 0.4,
+      opacity: Math.random() * 0.6 + 0.1
+    }));
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      PARTICLES.forEach(p => {
+        p.x += p.dx; p.y += p.dy;
+        if (p.x < 0) p.x = canvas.width;
+        if (p.x > canvas.width) p.x = 0;
+        if (p.y < 0) p.y = canvas.height;
+        if (p.y > canvas.height) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(96,165,250,${p.opacity})`;
+        ctx.fill();
+        // Draw connecting lines to nearby particles
+        PARTICLES.forEach(p2 => {
+          const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+          if (dist < 100) {
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = `rgba(96,165,250,${0.08 * (1 - dist / 100)})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        });
+      });
+      if (document.getElementById('hero-landing')) requestAnimationFrame(drawParticles);
+    }
+    drawParticles();
+  }
+
+  // ── Stat counters ───────────────────────────────────────────
+  const statEls = document.querySelectorAll('.hero-stat-num');
+  statEls.forEach(el => {
+    const target = parseFloat(el.dataset.target);
+    const isDecimal = target % 1 !== 0;
+    const duration = 1600;
+    const start = performance.now();
+    function tick(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const value = target * ease;
+      el.textContent = isDecimal ? value.toFixed(1) : Math.round(value);
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    setTimeout(() => requestAnimationFrame(tick), 400);
+  });
+
+  // ── Enter Dashboard transition ──────────────────────────────
+  function enterDashboard() {
+    hero.classList.add('exit');
+    setTimeout(() => {
+      hero.style.display = 'none';
+      appShell.style.display = 'flex';
+      document.body.style.overflow = '';
+      if (window.lucide) window.lucide.createIcons();
+    }, 820);
+  }
+
+  document.getElementById('hero-enter-btn')?.addEventListener('click', enterDashboard);
+  document.getElementById('hero-enter-btn-top')?.addEventListener('click', enterDashboard);
+  document.getElementById('hero-scroll-hint')?.addEventListener('click', enterDashboard);
+  document.getElementById('hero-arrow-btn')?.addEventListener('click', enterDashboard);
+
+  // Keyboard shortcut — press Enter or Space to proceed
+  document.addEventListener('keydown', (e) => {
+    if (hero.style.display !== 'none' && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      enterDashboard();
+    }
+  }, { once: true });
+}
+
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   if (window.lucide) window.lucide.createIcons();
+
+  // Init hero landing first
+  initHero();
 
   // Apply saved theme
   applyTheme((localStorage.getItem('nexus_theme') || 'dark') === 'dark');
