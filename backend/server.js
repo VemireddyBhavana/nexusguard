@@ -68,19 +68,79 @@ app.get('/metrics', (req, res) => {
   });
 });
 
-// ── Health Check ──────────────────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', ts: Date.now() });
+// ── MOCK DATA STORES ──────────────────────────────────────────
+const AUDIT_LOGS = [
+  { ts: new Date().toISOString(), user: "Admin (AD)", action: "System Initialization", impact: "GLOBAL", status: "SUCCESS" },
+  { ts: new Date().toISOString(), user: "Perception Hub", action: "Node_01 Handshake", impact: "INFRA", status: "STABLE" }
+];
+
+const KNOWLEDGE_SOURCES = [
+  { id: 1, name: "Infrastructure Runbook 2026.pdf", type: "PDF", relevance: "98%", status: "INDEXED" },
+  { id: 2, name: "Stripe API Documentation", type: "URL", relevance: "85%", status: "SYNCED" },
+  { id: 3, name: "Cluster-Alpha Security Specs", type: "DOC", relevance: "92%", status: "INDEXED" }
+];
+
+// ── NEW ENTERPRISE ENDPOINTS ──────────────────────────────────
+
+// 1. TOPOLOGY
+app.get('/topology', (req, res) => {
+  res.json({
+    nodes: [
+      { id: 'cloud', label: 'AWS Cloud', type: 'cloud', x: 400, y: 50 },
+      { id: 'lb', label: 'Load Balancer', type: 'gateway', x: 400, y: 150 },
+      { id: 'api', label: 'API Gateway', type: 'service', x: 400, y: 250 },
+      { id: 'srv1', label: 'Auth Service', type: 'microservice', x: 250, y: 350 },
+      { id: 'srv2', label: 'Payment Service', type: 'microservice', x: 550, y: 350 },
+      { id: 'db1', label: 'User DB (RDS)', type: 'database', x: 250, y: 450 },
+      { id: 'db2', label: 'Transaction DB', type: 'database', x: 550, y: 450 },
+      { id: 'agent', label: 'Nexus Agent', type: 'ai', x: 400, y: 400 }
+    ],
+    links: [
+      { from: 'cloud', to: 'lb' }, { from: 'lb', to: 'api' },
+      { from: 'api', to: 'srv1' }, { from: 'api', to: 'srv2' },
+      { from: 'srv1', to: 'db1' }, { from: 'srv2', to: 'db2' },
+      { from: 'agent', to: 'api' }, { from: 'agent', to: 'cloud' }
+    ]
+  });
+});
+
+// 2. SECURITY
+app.get('/security', (req, res) => {
+  res.json({
+    complianceScore: "94.2%",
+    vulnerabilities: { critical: 0, high: 2, medium: 12, low: 45 },
+    lastScan: new Date().toISOString(),
+    threatMatrix: Array.from({ length: 48 }, () => Math.random() > 0.9 ? 1 : 0)
+  });
+});
+
+// 3. AUDIT
+app.get('/audit', (req, res) => {
+  res.json(AUDIT_LOGS);
+});
+
+// 4. KNOWLEDGE
+app.get('/knowledge', (req, res) => {
+  res.json(KNOWLEDGE_SOURCES);
+});
+
+// 5. BILLING
+app.get('/billing', (req, res) => {
+  res.json({
+    roi: "$1,245,800",
+    tokensUsed: "42.5M",
+    monthlyTrend: [120, 150, 180, 210, 240, 280, 310],
+    savingsBreakdown: { downtime: "60%", manualLabor: "30%", infrastructure: "10%" }
+  });
 });
 
 // ── Start ─────────────────────────────────────────────────
 const HOST = '0.0.0.0';
 app.listen(PORT, HOST, () => {
   console.log(`🚀 NexusGuard API Backend running on http://localhost:${PORT}`);
-  console.log(`   → /analyze       — Main analysis pipeline`);
-  console.log(`   → /analyze/webhook — External integration hook`);
-  console.log(`   → /chat          — AI SRE chat`);
-  console.log(`   → /stream        — SSE live feed`);
-  console.log(`   → /metrics       — System metrics`);
-  console.log(`   → /health        — Health check`);
+  console.log(`   → /topology      — Infrastructure map data`);
+  console.log(`   → /security      — Compliance & threats`);
+  console.log(`   → /audit         — Global activity ledger`);
+  console.log(`   → /knowledge     — RAG source management`);
+  console.log(`   → /billing       — Financial ROI tracking`);
 });

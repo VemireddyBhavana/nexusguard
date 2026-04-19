@@ -529,13 +529,41 @@ function showIncidentModal(incidentId) {
 function switchToView(viewId) {
   ui.views.forEach(v => v.classList.remove('active'));
   ui.navItems.forEach(n => n.classList.remove('active'));
+  
   const targetView = document.getElementById(`view-${viewId}`);
   const targetNav = document.querySelector(`.nav-item[data-view="${viewId}"]`);
+  
   if (targetView) targetView.classList.add('active');
   if (targetNav) targetNav.classList.add('active');
+
+  // Update Breadcrumb/Title
+  const titleMap = {
+    'dashboard': 'Global Command Center',
+    'topology': 'Infrastructure Topology',
+    'workflow': 'Agent Workflow Builder',
+    'status': 'System Operational Status',
+    'analytics': 'Global ROI Analytics',
+    'security': 'Security & Compliance hub',
+    'audit': 'Enterprise Audit Ledger',
+    'knowledge': 'RAG Knowledge Base',
+    'billing': 'ROI & Financials',
+    'profile': 'User Profile Settings',
+    'settings': 'Agent Configuration'
+  };
+  if (document.getElementById('view-title')) {
+    document.getElementById('view-title').innerText = titleMap[viewId] || viewId.toUpperCase();
+  }
+
+  // Render Logic
   if (viewId === 'history') renderHistory();
   if (viewId === 'analytics') renderAnalytics();
   if (viewId === 'status') renderStatusPage();
+  if (viewId === 'topology') renderTopology();
+  if (viewId === 'workflow') renderWorkflow();
+  if (viewId === 'security') renderSecurity();
+  if (viewId === 'audit') renderAudit();
+  if (viewId === 'knowledge') renderKnowledge();
+  if (viewId === 'billing') renderBilling();
 }
 
 // ── SAVE INCIDENT ─────────────────────────────────────────────
@@ -1421,6 +1449,154 @@ function initHero() {
   }, { once: true });
 }
 
+// ── ENTERPRISE MODULES LOGIC ───────────────────────────────────
+
+// 1. TOPOLOGY MAP (Canvas)
+async function renderTopology() {
+    const canvas = document.getElementById('topo-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.parentElement.clientWidth;
+    canvas.height = canvas.parentElement.clientHeight;
+
+    try {
+        const res = await fetch('http://127.0.0.1:5000/topology');
+        const { nodes, links } = await res.json();
+
+        function draw() {
+            if (document.getElementById('view-topology').style.display === 'none') return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw Links
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.2)';
+            ctx.lineWidth = 1.5;
+            links.forEach(l => {
+                const fromIdx = nodes.findIndex(n => n.id === l.from);
+                const toIdx = nodes.findIndex(n => n.id === l.to);
+                if (fromIdx === -1 || toIdx === -1) return;
+                const f = nodes[fromIdx]; const t = nodes[toIdx];
+                ctx.beginPath();
+                ctx.moveTo(f.x, f.y);
+                ctx.lineTo(t.x, t.y);
+                ctx.stroke();
+            });
+
+            // Draw Nodes
+            nodes.forEach(n => {
+                ctx.beginPath();
+                ctx.arc(n.x, n.y, 8, 0, Math.PI * 2);
+                ctx.fillStyle = n.type === 'ai' ? '#a855f7' : '#3b82f6';
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = ctx.fillStyle;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText(n.label, n.x, n.y + 22);
+            });
+            requestAnimationFrame(draw);
+        }
+        draw();
+    } catch (e) { console.error('Topology Load Failed'); }
+}
+
+// 2. WORKFLOW BUILDER (SVG)
+function renderWorkflow() {
+    const svg = document.getElementById('workflow-svg');
+    if (!svg) return;
+    const steps = [
+        { id: 'p', label: 'Perception Channel', x: 50, y: 200, color: '#60a5fa' },
+        { id: 'm', label: 'Inference Manager', x: 250, y: 200, color: '#818cf8' },
+        { id: 'r', label: 'RAG Knowledge', x: 450, y: 300, color: '#a78bfa' },
+        { id: 'ai', label: 'Reasoning Engine', x: 450, y: 100, color: '#34d399' },
+        { id: 'a', label: 'Action Gateway', x: 650, y: 200, color: '#fb923c' }
+    ];
+
+    let html = '';
+    // Links
+    html += `<path d="M 120 200 L 250 200" stroke="rgba(255,255,255,0.1)" stroke-width="2" fill="none" />`;
+    html += `<path d="M 320 200 L 450 100" stroke="rgba(255,255,255,0.1)" stroke-width="2" fill="none" />`;
+    html += `<path d="M 320 200 L 450 300" stroke="rgba(255,255,255,0.1)" stroke-width="2" fill="none" />`;
+    html += `<path d="M 520 100 L 650 200" stroke="rgba(255,255,255,0.1)" stroke-width="2" fill="none" />`;
+    html += `<path d="M 520 300 L 650 200" stroke="rgba(255,255,255,0.1)" stroke-width="2" fill="none" />`;
+
+    // Nodes
+    steps.forEach(s => {
+        html += `<g class="wf-node">
+            <rect x="${s.x}" y="${s.y - 30}" width="140" height="60" rx="10" fill="rgba(30,41,59,0.8)" stroke="${s.color}" stroke-width="2" />
+            <text x="${s.x + 70}" y="${s.y + 5}" fill="white" font-size="11" text-anchor="middle">${s.label}</text>
+        </g>`;
+    });
+    svg.innerHTML = html;
+}
+
+// 3. SECURITY CENTER
+async function renderSecurity() {
+    try {
+        const res = await fetch('http://127.0.0.1:5000/security');
+        const data = await res.json();
+        document.getElementById('sec-compliance-score').innerText = data.complianceScore;
+        document.getElementById('sec-active-threats').innerText = data.vulnerabilities.critical;
+        
+        const matrix = document.getElementById('threat-matrix-grid');
+        if (matrix) {
+            matrix.innerHTML = data.threatMatrix.map(v => `<div class="matrix-cell ${v ? 'active' : ''}"></div>`).join('');
+        }
+    } catch (e) {}
+}
+
+// 4. AUDIT LEDGER
+async function renderAudit() {
+    try {
+        const res = await fetch('http://127.0.0.1:5000/audit');
+        const logs = await res.json();
+        const body = document.getElementById('audit-body');
+        if (!body) return;
+        body.innerHTML = logs.map(l => `
+            <tr>
+                <td style="font-size:0.7rem;">${new Date(l.ts).toLocaleString()}</td>
+                <td style="font-weight:700;">${l.user}</td>
+                <td>${l.action}</td>
+                <td><span class="badge severity-low">${l.impact}</span></td>
+                <td style="color:#4ade80;">${l.status}</td>
+            </tr>
+        `).join('');
+    } catch (e) {}
+}
+
+// 5. KNOWLEDGE BASE
+async function renderKnowledge() {
+    try {
+        const res = await fetch('http://127.0.0.1:5000/knowledge');
+        const sources = await res.json();
+        const list = document.getElementById('kb-sources-list');
+        if (!list) return;
+        list.innerHTML = sources.map(s => `
+            <div class="kb-source-card glass-card">
+                <i data-lucide="${s.type === 'PDF' ? 'file-text' : 'globe'}"></i>
+                <div style="flex:1;">
+                    <div style="font-weight:800;font-size:0.85rem;">${s.name}</div>
+                    <div style="font-size:0.7rem;opacity:0.6;">Relevance: ${s.relevance} · ${s.status}</div>
+                </div>
+                <button class="btn-icon"><i data-lucide="trash-2"></i></button>
+            </div>
+        `).join('');
+        if (window.lucide) window.lucide.createIcons();
+    } catch (e) {}
+}
+
+// 6. BILLING & ROI
+async function renderBilling() {
+    try {
+        const res = await fetch('http://127.0.0.1:5000/billing');
+        const data = await res.json();
+        const roiEl = document.querySelector('.roi-val');
+        if (roiEl) roiEl.innerText = data.roi;
+    } catch (e) {}
+}
+
 // ── REAL-TIME SYNC POLLER ─────────────────────────────────────
 async function syncGlobalDashboard() {
   try {
@@ -1431,9 +1607,11 @@ async function syncGlobalDashboard() {
     if (ui.uptimeValue) ui.uptimeValue.innerText = data.networkUptime || '99.99%';
     if (ui.costsValue) animateCounter(ui.costsValue, data.costsProtected || 842500);
     
-    // If Status view is active, refresh it
-    const statusView = document.getElementById('view-status');
-    if (statusView?.classList.contains('active')) renderStatusPage();
+    // Refresh active view data
+    const activeView = ui.views.find(v => v.classList.contains('active'))?.id;
+    if (activeView === 'view-status') renderStatusPage();
+    if (activeView === 'view-security') renderSecurity();
+    if (activeView === 'view-topology') renderTopology();
 
   } catch (err) {
     console.warn('Dashboard Sync: Backend offline.');
@@ -1490,6 +1668,15 @@ function initCommonUI() {
   const modal = document.getElementById('incident-modal');
   document.getElementById('close-modal')?.addEventListener('click', () => modal?.classList.remove('active'));
   modal?.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
+
+  // Workspace Selector
+  const wsSelect = document.getElementById('workspace-ctx-select');
+  wsSelect?.addEventListener('change', (e) => {
+    const ws = e.target.value;
+    showToast(`Switching context to ${ws.toUpperCase()}...`, 'info');
+    updateLiveConsole(`System Context: Switched to ${ws.toUpperCase()} Infrastructure Cluster.`);
+    // In a real app, this would trigger a global re-fetch with ws_id
+  });
 
   // Global Key Shortcuts
   document.addEventListener('keydown', (e) => {

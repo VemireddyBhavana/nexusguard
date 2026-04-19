@@ -186,48 +186,74 @@
                     <i data-lucide="panel-left-close" style="width:16px;height:16px;"></i>
                 </button>
             </div>
-            <div class="version sidebar-full-text">v2.1 PRO</div>
+            <div class="version sidebar-full-text">v2.1 PRO ENTERPRISE</div>
 
             <nav class="sidebar-nav">
+                <div class="nav-group-label sidebar-full-text">COMMAND CENTER</div>
                 <a href="#" class="nav-item active" data-view="dashboard">
                     <i data-lucide="layout-dashboard"></i>
                     <span data-i18n="NAV_DASHBOARD">Dashboard</span>
                 </a>
-                <a href="#" class="nav-item" data-view="history">
-                    <i data-lucide="history"></i>
-                    <span data-i18n="NAV_HISTORY">Incident History</span>
+                <a href="#" class="nav-item" data-view="topology">
+                    <i data-lucide="network"></i>
+                    <span>Infra Topology</span>
+                    <span class="nav-badge nav-badge-blue">NEW</span>
                 </a>
-                <a href="#" class="nav-item" data-view="analytics">
-                    <i data-lucide="bar-chart-3"></i>
-                    <span data-i18n="NAV_ANALYTICS">Analytics</span>
+                <a href="#" class="nav-item" data-view="workflow">
+                    <i data-lucide="git-branch"></i>
+                    <span>Workflow Builder</span>
                 </a>
+
+                <div class="nav-group-label sidebar-full-text">OPERATIONS</div>
                 <a href="#" class="nav-item" data-view="status">
                     <i data-lucide="activity"></i>
                     <span>System Status</span>
                     <span class="nav-badge nav-badge-green">LIVE</span>
                 </a>
+                <a href="#" class="nav-item" data-view="analytics">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span data-i18n="NAV_ANALYTICS">Analytics</span>
+                </a>
+
+                <div class="nav-group-label sidebar-full-text">GOVERNANCE</div>
+                <a href="#" class="nav-item" data-view="security">
+                    <i data-lucide="shield-check"></i>
+                    <span>Security Center</span>
+                </a>
+                <a href="#" class="nav-item" data-view="audit">
+                    <i data-lucide="scroll"></i>
+                    <span>Audit Ledger</span>
+                </a>
+                <a href="#" class="nav-item" data-view="knowledge">
+                    <i data-lucide="database"></i>
+                    <span>Knowledge Base</span>
+                </a>
+
+                <div class="nav-group-label sidebar-full-text">MANAGEMENT</div>
+                <a href="#" class="nav-item" data-view="billing">
+                    <i data-lucide="credit-card"></i>
+                    <span>Billing & ROI</span>
+                </a>
+                <a href="#" class="nav-item" data-view="profile">
+                    <i data-lucide="user"></i>
+                    <span>User Profile</span>
+                </a>
                 <a href="#" class="nav-item" data-view="settings">
                     <i data-lucide="settings"></i>
                     <span data-i18n="NAV_SETTINGS">Settings</span>
                 </a>
-                <div class="sidebar-divider"></div>
-                <a href="#" class="nav-item nav-item-upgrade" data-view="pricing">
-                    <i data-lucide="zap"></i>
-                    <span>Upgrade to Pro</span>
-                </a>
             </nav>
 
             <div class="sidebar-footer">
-                <div style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(55, 65, 81, 0.4); border-radius: 8px; border: 1px solid var(--border-color);">
-                    <div style="font-size: 0.6rem; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Execution Mode</div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="live-mode-toggle">
-                            <span class="slider"></span>
-                        </label>
-                        <span id="mode-label" style="font-size: 0.65rem; color: var(--text-secondary);">DEMO</span>
-                    </div>
+                <div class="workspace-selector sidebar-full-text">
+                    <div style="font-size: 0.6rem; color: var(--text-secondary); margin-bottom: 4px; text-transform: uppercase;">Workspace context</div>
+                    <select id="workspace-ctx-select" class="btn-secondary" style="width:100%; font-size: 0.7rem; padding: 4px 8px; border-radius: 6px;">
+                        <option value="prod">Production-Alpha</option>
+                        <option value="staging">Staging-Cluster</option>
+                        <option value="dev">Development-Local</option>
+                    </select>
                 </div>
+                <div class="sidebar-divider"></div>
                 <div class="user-block">
                     <div class="avatar">AD</div>
                     <div class="user-info">
@@ -452,43 +478,169 @@
                     </div>
                 </div>
 
-                <!-- VIEW: HISTORY -->
-                <div id="view-history" class="view-content">
+                <!-- VIEW: TOPOLOGY (Infrastructure Map) -->
+                <div id="view-topology" class="view-content">
                     <div class="container">
                         <div class="page-intro">
-                            <h2 class="section-title" data-i18n="TITLE_LEDGER">Incident Ledger</h2>
-                            <p class="section-subtitle" data-i18n="SUBTITLE_LEDGER">Persistent audit trail of all
-                                autonomous interventions across the global infrastructure.</p>
+                            <h2 class="section-title">Infrastructure Topology</h2>
+                            <p class="section-subtitle">Visual command center of your distributed node network and AI agent paths.</p>
                         </div>
+                        <div class="topology-wrapper">
+                            <canvas id="topo-canvas"></canvas>
+                            <div class="topo-controls">
+                                <button class="btn-icon" id="topo-zoom-in"><i data-lucide="zoom-in"></i></button>
+                                <button class="btn-icon" id="topo-zoom-out"><i data-lucide="zoom-out"></i></button>
+                                <button class="btn-icon" id="topo-reset"><i data-lucide="maximize"></i></button>
+                            </div>
+                            <div id="topo-details" class="topo-details-panel glass-card">
+                                <h4>Node Details</h4>
+                                <div id="topo-details-content">Select a node to view telemetry.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
+                <!-- VIEW: WORKFLOW (Agent Pipeline) -->
+                <div id="view-workflow" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title">AI Workflow Builder</h2>
+                            <p class="section-subtitle">Orchestrate the reasoning paths and automated decision gates for your autonomous agents.</p>
+                        </div>
+                        <div class="glass-card workflow-builder-area">
+                            <svg id="workflow-svg" width="100%" height="500">
+                                <!-- Dynamic SVG content for the flowchart -->
+                            </svg>
+                            <div class="workflow-sidebar">
+                                <div class="wf-block" draggable="true">Perception Gate</div>
+                                <div class="wf-block" draggable="true">Reasoning Step</div>
+                                <div class="wf-block" draggable="true">Action Decider</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: SECURITY (Security Center) -->
+                <div id="view-security" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title">Security & Compliance</h2>
+                            <p class="section-subtitle">Real-time governance dashboard showing audit readiness and threat surface analysis.</p>
+                        </div>
+                        <div class="security-stats-grid">
+                            <div class="glass-card sec-stat">
+                                <span class="label">Compliance Score</span>
+                                <div class="val" id="sec-compliance-score">94.2%</div>
+                                <div class="progress-bar"><div class="fill" style="width: 94%;"></div></div>
+                            </div>
+                            <div class="glass-card sec-stat">
+                                <span class="label">Active Threats</span>
+                                <div class="val" id="sec-active-threats" style="color:var(--success);">0</div>
+                                <p style="font-size:0.7rem;opacity:0.6;margin-top:0.5rem;">Perception Hub: CLEAR</p>
+                            </div>
+                            <div class="glass-card sec-stat">
+                                <span class="label">Assets Scanned</span>
+                                <div class="val" id="sec-assets-scanned">1,402</div>
+                            </div>
+                        </div>
+                        <div class="glass-card threat-matrix">
+                            <div class="card-header"><h3 style="font-size:0.9rem;">Global Threat Surface Matrix</h3></div>
+                            <div id="threat-matrix-grid" class="matrix-grid"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: AUDIT (Audit Ledger) -->
+                <div id="view-audit" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title">Enterprise Audit Ledger</h2>
+                            <p class="section-subtitle">Tamper-proof traceability of every user interaction and automated AI decision.</p>
+                        </div>
                         <div class="history-controls">
-                            <input type="text" id="history-search" class="search-input" placeholder="Search by ID or issue...">
-                            <select id="history-filter" class="btn-secondary" style="padding:0.55rem 1rem;">
-                                <option value="all">All Severities</option>
-                                <option value="critical">Critical</option>
-                                <option value="high">High</option>
-                                <option value="medium">Medium</option>
-                                <option value="low">Low</option>
-                            </select>
-                            <button id="export-csv-btn" class="btn-secondary">
-                                <i data-lucide="download" style="width:14px;height:14px;"></i> Export CSV
+                            <input type="text" id="audit-search" class="search-input" placeholder="Filter audit logs...">
+                            <button id="audit-export-pdf" class="btn-secondary">
+                                <i data-lucide="file-text" style="width:14px;height:14px;"></i> Compliance Export
                             </button>
                         </div>
-
                         <div class="glass-card table-wrapper">
-                            <table id="history-table">
+                            <table id="audit-table">
                                 <thead>
                                     <tr>
-                                        <th data-i18n="TH_TIMESTAMP">TIMESTAMP</th>
-                                        <th data-i18n="TH_ID">INCIDENT ID</th>
-                                        <th data-i18n="TH_ISSUE">ISSUE</th>
-                                        <th data-i18n="TH_SEVERITY">SEVERITY</th>
-                                        <th data-i18n="TH_MTTR">MTTR</th>
-                                        <th data-i18n="TH_STATUS">ACTION STATUS</th>
+                                        <th>TIMESTAMP</th>
+                                        <th>USER/AGENT</th>
+                                        <th>ACTION</th>
+                                        <th>IMPACT</th>
+                                        <th>STATUS</th>
                                     </tr>
                                 </thead>
-                                <tbody id="history-body"></tbody>
+                                <tbody id="audit-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: KNOWLEDGE (RAG Manager) -->
+                <div id="view-knowledge" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title">Knowledge Base (RAG)</h2>
+                            <p class="section-subtitle">Manage the internal intelligence documents and schemas that anchor your AI reasoning.</p>
+                        </div>
+                        <div class="knowledge-grid">
+                            <div class="glass-card kb-upload">
+                                <i data-lucide="upload-cloud" style="width:30px;height:30px;color:var(--accent-primary);margin-bottom:1rem;"></i>
+                                <h4>Add Source</h4>
+                                <p>PDF, Text, or Web URL</p>
+                            </div>
+                            <div class="kb-sources" id="kb-sources-list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: BILLING & ROI -->
+                <div id="view-billing" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title">Financials & ROI Hub</h2>
+                            <p class="section-subtitle">Analysis of cloud cost reduction and ROI generated via automated AI resolutions.</p>
+                        </div>
+                        <div class="billing-grid">
+                            <div class="glass-card billing-card">
+                                <h3>Cumulative ROI</h3>
+                                <div class="roi-val">$1.24M</div>
+                                <div class="roi-chart-mini" id="roi-mini-sparkline"></div>
+                            </div>
+                            <div class="glass-card usage-card">
+                                <h3>Token Usage</h3>
+                                <div id="token-usage-bar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: PROFILE -->
+                <div id="view-profile" class="view-content">
+                    <div class="container">
+                        <div class="page-intro">
+                            <h2 class="section-title">Organization Settings</h2>
+                            <p class="section-subtitle">Configure organization-wide security defaults and notification webhooks.</p>
+                        </div>
+                        <div class="glass-card profile-settings">
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label>Org Name</label>
+                                    <input type="text" value="Acme Infrastructure Inc." disabled>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="input-group">
+                                    <label>SRE Notification Slack Webhook</label>
+                                    <input type="text" placeholder="https://hooks.slack.com/services/..." id="settings-slack-webhook">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
