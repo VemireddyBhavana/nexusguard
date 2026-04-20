@@ -97,7 +97,7 @@ export const errorDB = [
 
   // ── PERFORMANCE ───────────────────────────────────────────
   {
-    keywords: ["cpu", "high load", "cpu spike", "100%", "throttled"],
+    keywords: ["cpu", "high load", "cpu spike", "100%", "99%", "threshold", "usage", "throttled"],
     category: "Performance", issue: "CPU Spike Detected",
     fix: "Profile the process to identify the hot path. Scale horizontally via HPA. Set CPU limits in the container spec. Optimize the high-CPU algorithm or add async processing."
   },
@@ -116,7 +116,7 @@ export const errorDB = [
 
   // ── PAYMENT ──────────────────────────────────────────────
   {
-    keywords: ["stripe", "payment", "checkout", "billing", "gateway"],
+    keywords: ["stripe", "payment failure", "checkout error", "billing error", "gateway timed out"],
     category: "Payment", issue: "Payment Gateway Failure",
     fix: "Failover to the backup payment processor. Check the Stripe status page for incidents. Verify API key validity and webhook signature integrity."
   },
@@ -297,5 +297,71 @@ export const errorDB = [
     keywords: ["openshift", "route", "admission", "rejected"],
     category: "Platform", issue: "OpenShift Route Admission Rejected",
     fix: "The OpenShift router rejected the route because the hostname is already in use or the certificate is invalid. Check 'oc get route -o yaml' for the 'status' field details."
+  },
+  // ── UNIVERSAL TECH FAILURES [V4 EXPANSION] ────────────────
+  {
+    keywords: ["is not defined", "referenceerror", "undefined"],
+    category: "JavaScript", issue: "Reference Variable Scope Gap",
+    fix: "The variable is being accessed outside its declared scope or before initialization. Verify hoisting patterns, check for typos in variable names, and ensure all scripts are loaded in the correct order."
+  },
+  {
+    keywords: ["is not a function", "typeerror", "null pointer"],
+    category: "JavaScript", issue: "Object Type Mismatch",
+    fix: "Attempted to call a method on 'null', 'undefined', or a non-function object. Use optional chaining (obj?.method()) and verify that the API response contains the expected data structure before processing."
+  },
+  {
+    keywords: ["unexpected token", "syntaxerror", "parsing error", "json at position"],
+    category: "System", issue: "Syntax/Parsing Failure",
+    fix: "Malformed data structure detected (likely JSON or JS Syntax). Audit your build artifacts for unclosed brackets or invalid characters. If parsing an API response, ensure the Content-Type is application/json."
+  },
+  {
+    keywords: ["cors", "access-control-allow-origin", "cross-origin"],
+    category: "Networking", issue: "CORS Policy Violation",
+    fix: "The browser blocked the request because the server's Access-Control-Allow-Origin header is missing or mismatched. Update the backend CORS configuration to allow the specific origin of your frontend."
+  },
+  {
+    keywords: ["eaddrinuse", "port in use", "address already in use"],
+    category: "Networking", issue: "Network Port Collision",
+    fix: "Multiple processes are trying to bind to the same port. Identify the blocking process using 'lsof -i :<port>' or 'netstat -ano', then kill it or change your application's listening port."
+  },
+  {
+    keywords: ["module not found", "cannot find module", "err_module_not_found"],
+    category: "Backend", issue: "Dependency Resolution Failure",
+    fix: "A required package or local file is missing from the runtime environment. Run 'npm install', verify file paths (case-sensitivity), and ensure your build process includes all necessary assets."
+  },
+  {
+    keywords: ["unique constraint", "duplicate key", "already exists", "violates unique"],
+    category: "Database", issue: "Database Data Collision",
+    fix: "The operation failed because it attempted to insert a duplicate value into a unique column. Implement idempotency checks, use 'UPSERT' (INSERT ... ON CONFLICT), or verify client-side validation logic."
+  },
+  {
+    keywords: ["foreign key", "fk constraint", "referential integrity"],
+    category: "Database", issue: "Referential Integrity Violation",
+    fix: "Attempted to delete or update a record that is referenced by another table. Review your deletion cascading policy or ensure the dependent records are cleaned up before modifying the parent."
+  },
+  {
+    keywords: ["mixed content", "https", "insecure request"],
+    category: "Security", issue: "SSL Mixed Content Block",
+    fix: "Your HTTPS site is trying to load resources over HTTP. The browser blocked these for security. Update all external links (scripts, styles, APIs) to use HTTPS."
+  },
+  {
+    keywords: ["socket.io", "websocket", "polling", "handshake failed"],
+    category: "Networking", issue: "Real-time Socket Disconnect",
+    fix: "The WebSocket connection was dropped or could not be established. Check for proxy/load balancer timeouts, verify sticky sessions are enabled if using multiple backend instances, and ensure the client/server versions match."
+  },
+  {
+    keywords: ["permission denied", "chmod", "eacces", "0644"],
+    category: "OS", issue: "File System Permission Gap",
+    fix: "The application user lacks read/write permissions for the requested path. Adjust file permissions via 'chmod' or 'chown', or move the data to a directory the process is authorized to access."
+  },
+  {
+    keywords: ["too many open files", "ulimit", "file descriptor"],
+    category: "OS", issue: "OS File Descriptor Exhaustion",
+    fix: "The process has hit the operating system's open file limit. Increase the ulimit for the user, audit for unclosed file handles or network sockets, and implement connection pooling."
+  },
+  {
+    keywords: ["segmentation fault", "segfault", "core dumped"],
+    category: "System", issue: "Critical Memory Corruption (Segfault)",
+    fix: "The binary attempted to access an unauthorized memory address. This usually indicates a bug in a native C/C++ extension or an OS-level conflict. Check kernel logs (dmesg) and update your runtime environment."
   }
 ];

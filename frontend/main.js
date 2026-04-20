@@ -43,8 +43,8 @@ const ui = {
   autoDetectBtn: document.getElementById('auto-detect-btn'),
   financeBox: document.getElementById('finance-impact-box'),
   financeValue: document.getElementById('content-finance'),
-  navItems: document.querySelectorAll('.nav-item'),
-  views: document.querySelectorAll('.view-content'),
+  navItems: Array.from(document.querySelectorAll('.nav-item')),
+  views: Array.from(document.querySelectorAll('.view-content')),
   liveModeToggle: document.getElementById('live-mode-toggle'),
   modeLabel: document.getElementById('mode-label'),
   relevantIssuesContainer: document.getElementById('relevant-issues-container'),
@@ -582,11 +582,12 @@ function switchToView(viewId) {
   if (viewId === 'billing') renderBilling();
 }
 
+// Consolidated high-fidelity render functions
 function renderSecurity() {
   const matrix = document.getElementById('threat-matrix-grid');
   if (!matrix) return;
   matrix.innerHTML = '';
-  // Generate 48 matrix nodes
+  // Generate 48 high-fidelity matrix nodes
   for (let i = 0; i < 48; i++) {
     const node = document.createElement('div');
     node.className = 'matrix-node';
@@ -634,38 +635,8 @@ function filterAudit() {
 }
 
 // -- KNOWLEDGE INGESTION (HARVESTER) --------------------------
-async function handleIngestKnowledge() {
-    const category = document.getElementById('ingest-category').value;
-    const content = document.getElementById('ingest-content').value.trim();
-    if (!content) { showToast('Please enter runbook content to ingest.', 'warning'); return; }
+// Knowledge Harvester UI logic moved to consolidated backend function below
 
-    const harvester = document.querySelector('#view-knowledge-ingest .glass-card');
-    const scanner = document.createElement('div');
-    scanner.className = 'ingest-scanner-overlay';
-    harvester.appendChild(scanner);
-
-    showToast(`Harvester: tokenizing ${category} context...`, 'info');
-    updateLiveConsole(`📚 RAG Agent: Processing knowledge chunk [Type: ${category}]`);
-
-    await sleep(2000); // Simulate processing
-
-    const facts = JSON.parse(localStorage.getItem('ingested_facts') || '[]');
-    facts.unshift({
-        id: `FACT-${Math.floor(1000 + Math.random()*9000)}`,
-        category,
-        text: content.substring(0, 180) + (content.length > 180 ? '...' : ''),
-        trust: 95 + Math.floor(Math.random()*5),
-        timestamp: new Date().toLocaleTimeString()
-    });
-    localStorage.setItem('ingested_facts', JSON.stringify(facts.slice(0, 10)));
-    
-    scanner.remove();
-    document.getElementById('ingest-content').value = '';
-    renderKnowledgeFacts();
-    
-    showToast('Knowledge ingested successfully. Neural weights updated.', 'success');
-    updateLiveConsole(`🧠 Brain Ingestion: Concepts integrated into Global Reasoning Hub.`);
-}
 
 function renderKnowledgeFacts() {
     const list = document.getElementById('learned-facts-list');
@@ -781,6 +752,14 @@ async function runWorkflow() {
       if (safetyTag) safetyTag.style.display = 'inline-flex';
     }
 
+    const areaEl = document.getElementById('content-area');
+    if (aiData.affectedArea && areaEl) {
+        areaEl.innerText = aiData.affectedArea;
+        areaEl.style.display = 'inline-block';
+    } else if (areaEl) {
+        areaEl.style.display = 'none';
+    }
+
     cards.issue.classList.add('visible');
     if (steps.manager) steps.manager.classList.replace('active', 'completed');
     await sleep(600);
@@ -820,6 +799,16 @@ async function runWorkflow() {
 
     if (steps.fix) steps.fix.classList.add('active');
     content.suggestion.innerText = aiData.fix || 'Generating remediation path...';
+    
+    const prevBox = document.getElementById('prevention-box');
+    const prevText = document.getElementById('content-prevention');
+    if (aiData.prevention && prevBox && prevText) {
+        prevText.innerText = aiData.prevention;
+        prevBox.style.display = 'block';
+    } else if (prevBox) {
+        prevBox.style.display = 'none';
+    }
+
     cards.suggestion.classList.add('visible');
     await sleep(800);
     if (steps.fix) steps.fix.classList.replace('active', 'completed');
@@ -832,6 +821,16 @@ async function runWorkflow() {
 
     const mode = aiData.action?.mode || 'DEMO';
     const code = aiData.action?.recoveryCode || 'GENERIC_OPTIMIZE';
+    
+    const patchWrap = document.getElementById('code-patch-wrapper');
+    const patchPre = document.getElementById('content-patch');
+    if (aiData.codePatch && patchWrap && patchPre) {
+        patchPre.innerText = aiData.codePatch;
+        patchWrap.style.display = 'block';
+    } else if (patchWrap) {
+        patchWrap.style.display = 'none';
+    }
+
     document.getElementById('content-actions').innerHTML = `
       <span style="color:var(--success);font-weight:700;">✓ RESOLVED — ${mode} MODE</span>
       <div style="font-size:0.75rem;margin-top:0.4rem;opacity:0.7;">Recovery Pulse: <span style="color:#a855f7;font-weight:700;">${code}</span>${aiData.action?.slackDispatched ? ' · <span style="color:#4ade80;">📣 Slack Notified</span>' : ''}</div>`;
@@ -1457,25 +1456,32 @@ function initAuth() {
     loginForm.style.display = 'block';
   });
 
-  const completeAuth = (type) => {
-    showToast(`Welcome back! Session initialized via ${type}.`, 'success');
-    localStorage.setItem('nexus_session', 'active_' + Date.now());
-    document.getElementById('view-auth').classList.add('exit');
-    setTimeout(() => {
-      document.getElementById('view-auth').style.display = 'none';
-      document.getElementById('app-shell').style.display = 'flex';
-      if (window.lucide) window.lucide.createIcons();
-      // If first time, show onboarding after a small delay
-      if (localStorage.getItem('nexus_onboarded') !== 'true') {
-        setTimeout(initOnboarding, 1000);
-      }
-    }, 600);
-  };
-
   btnLogin?.addEventListener('click', () => completeAuth('Credentials'));
   btnSignup?.addEventListener('click', () => completeAuth('Signup'));
   btnDemo?.addEventListener('click', () => completeAuth('Demo Mode'));
 }
+
+const completeAuth = (type) => {
+  showToast(`Welcome back! Session initialized via ${type}.`, 'success');
+  localStorage.setItem('nexus_session', 'active_' + Date.now());
+  const authView = document.getElementById('view-auth');
+  const appShell = document.getElementById('app-shell');
+  
+  if (authView) authView.classList.add('exit');
+  
+  setTimeout(() => {
+    if (authView) authView.style.display = 'none';
+    if (appShell) appShell.style.display = 'flex';
+    if (window.lucide) window.lucide.createIcons();
+    // If first time, show onboarding after a small delay
+    if (localStorage.getItem('nexus_onboarded') !== 'true') {
+      setTimeout(initOnboarding, 1000);
+    }
+  }, 600);
+};
+
+// Export for hero access
+window.completeAuth = completeAuth;
 
 // -- HERO LANDING ----------------------------------------------─
 function initHero() {
@@ -1555,20 +1561,25 @@ function initHero() {
   });
 
   // -- Enter Transition ----------------------------------------
-  function proceedToAuth() {
+  function proceedToLaunch() {
     hero.classList.add('exit');
     setTimeout(() => {
       hero.style.display = 'none';
-      authView.style.display = 'flex';
-      initAuth();
+      // Auto-auth as guest for "Launch Dashboard" experience
+      if (typeof window.completeAuth === 'function') {
+          window.completeAuth('Direct Launch');
+      } else {
+          authView.style.display = 'flex';
+          initAuth();
+      }
       if (window.lucide) window.lucide.createIcons();
     }, 820);
   }
 
-  document.getElementById('hero-enter-btn')?.addEventListener('click', proceedToAuth);
-  document.getElementById('hero-enter-btn-top')?.addEventListener('click', proceedToAuth);
-  document.getElementById('hero-scroll-hint')?.addEventListener('click', proceedToAuth);
-  document.getElementById('hero-arrow-btn')?.addEventListener('click', proceedToAuth);
+  document.getElementById('hero-enter-btn')?.addEventListener('click', proceedToLaunch);
+  document.getElementById('hero-enter-btn-top')?.addEventListener('click', proceedToLaunch);
+  document.getElementById('hero-scroll-hint')?.addEventListener('click', proceedToLaunch);
+  document.getElementById('hero-arrow-btn')?.addEventListener('click', proceedToLaunch);
 
   document.addEventListener('keydown', (e) => {
     if (hero.style.display !== 'none' && (e.key === 'Enter' || e.key === ' ')) {
@@ -1779,22 +1790,6 @@ async function showWorkflowNodeDetails(agentId) {
         body.innerHTML = `<div class="error-msg">Backend sync failed. Agent details unavailable.</div>`;
     }
 }
-
-// 3. SECURITY CENTER
-async function renderSecurity() {
-    try {
-        const res = await fetch('http://127.0.0.1:5000/security');
-        const data = await res.json();
-        document.getElementById('sec-compliance-score').innerText = data.complianceScore;
-        document.getElementById('sec-active-threats').innerText = data.vulnerabilities.critical;
-        
-        const matrix = document.getElementById('threat-matrix-grid');
-        if (matrix) {
-            matrix.innerHTML = data.threatMatrix.map(v => `<div class="matrix-cell ${v ? 'active' : ''}"></div>`).join('');
-        }
-    } catch (e) {}
-}
-
 // 5. KNOWLEDGE HARVESTER (Step 7 Blueprint)
 async function renderKnowledgeIngest() {
     const list = document.getElementById('learned-facts-list');
@@ -1839,9 +1834,19 @@ async function handleIngestKnowledge() {
         return;
     }
 
+    // High-tech scanning animation
+    const harvester = document.querySelector('#view-knowledge-ingest .glass-card');
+    const scanner = document.createElement('div');
+    if (harvester) {
+        scanner.className = 'ingest-scanner-overlay';
+        harvester.appendChild(scanner);
+    }
+
     btn.disabled = true;
     btn.innerHTML = `<i data-lucide="loader" class="spin"></i> <span>ANALYZING DOCUMENT...</span>`;
     if (window.lucide) lucide.createIcons();
+
+    updateLiveConsole(`🧠 Knowledge Harvester: Tokenizing "${category}" context...`);
 
     try {
         const res = await fetch('http://127.0.0.1:5000/ingest-knowledge', {
@@ -1853,58 +1858,35 @@ async function handleIngestKnowledge() {
         
         if (data.success) {
             showToast('Brain Expansion Complete: Context Ingested.', 'success');
-            updateLiveConsole(`🧠 Knowledge Harvester: New context "${category}" integrated into RAG pipeline.`);
+            updateLiveConsole(`🧠 Knowledge Harvester: New context integrated into RAG pipeline.`);
             document.getElementById('ingest-content').value = '';
-            renderKnowledgeIngest();
+            
+            // Sync with local fact tracker too
+            const facts = JSON.parse(localStorage.getItem('ingested_facts') || '[]');
+            facts.unshift({
+                id: `FACT-${Math.floor(1000 + Math.random()*9000)}`,
+                category,
+                text: content.substring(0, 150) + '...',
+                trust: 98,
+                timestamp: new Date().toLocaleTimeString()
+            });
+            localStorage.setItem('ingested_facts', JSON.stringify(facts.slice(0, 10)));
+            
+            if (typeof renderKnowledgeFacts === 'function') renderKnowledgeFacts();
+            if (typeof renderKnowledgeIngest === 'function') renderKnowledgeIngest();
         }
     } catch (e) {
-        showToast('Ingestion failed.', 'danger');
+        showToast('Ingestion failed. Ensure backend is online.', 'danger');
     } finally {
+        if (scanner) scanner.remove();
         btn.disabled = false;
         btn.innerHTML = `<i data-lucide="zap"></i> <span>INGEST INTO GLOBAL ENGINE</span>`;
         if (window.lucide) lucide.createIcons();
     }
 }
 
-// 4. AUDIT LEDGER
-async function renderAudit() {
-    try {
-        const res = await fetch('http://127.0.0.1:5000/audit');
-        const logs = await res.json();
-        const body = document.getElementById('audit-body');
-        if (!body) return;
-        body.innerHTML = logs.map(l => `
-            <tr>
-                <td style="font-size:0.7rem;">${new Date(l.ts).toLocaleString()}</td>
-                <td style="font-weight:700;">${l.user}</td>
-                <td>${l.action}</td>
-                <td><span class="badge severity-low">${l.impact}</span></td>
-                <td style="color:#4ade80;">${l.status}</td>
-            </tr>
-        `).join('');
-    } catch (e) {}
-}
+// End of enterprise modules
 
-// 5. KNOWLEDGE BASE
-async function renderKnowledge() {
-    try {
-        const res = await fetch('http://127.0.0.1:5000/knowledge');
-        const sources = await res.json();
-        const list = document.getElementById('kb-sources-list');
-        if (!list) return;
-        list.innerHTML = sources.map(s => `
-            <div class="kb-source-card glass-card">
-                <i data-lucide="${s.type === 'PDF' ? 'file-text' : 'globe'}"></i>
-                <div style="flex:1;">
-                    <div style="font-weight:800;font-size:0.85rem;">${s.name}</div>
-                    <div style="font-size:0.7rem;opacity:0.6;">Relevance: ${s.relevance} · ${s.status}</div>
-                </div>
-                <button class="btn-icon"><i data-lucide="trash-2"></i></button>
-            </div>
-        `).join('');
-        if (window.lucide) window.lucide.createIcons();
-    } catch (e) {}
-}
 
 // 6. BILLING & ROI
 async function renderBilling() {
@@ -1933,11 +1915,15 @@ async function syncGlobalDashboard() {
     }
     
     // Refresh active view data
-    const activeView = ui.views.find(v => v.classList.contains('active'))?.id;
+    const activeViewNode = ui.views.find(v => v.classList.contains('active'));
+    const activeView = activeViewNode?.id;
+    
     if (activeView === 'view-status') renderStatusPage();
     if (activeView === 'view-security') renderSecurity();
     if (activeView === 'view-topology') renderTopology();
     if (activeView === 'view-knowledge-ingest') renderKnowledgeIngest();
+    if (activeView === 'view-audit') renderAudit();
+    if (activeView === 'view-analytics') renderAnalytics();
 
   } catch (err) {
     console.warn('Dashboard Sync: Backend offline.');

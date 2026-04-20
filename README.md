@@ -3,7 +3,7 @@
 # 🛡️ NexusGuard
 ### Enterprise Autonomous DevOps Agent
 
-**A production-grade, multi-agent AI platform that autonomously detects, diagnoses, and resolves infrastructure incidents — with zero human intervention.**
+**A production-grade, universal AI DevOps platform that autonomously detects, diagnoses, and resolves any infrastructure incident — from raw logs and human descriptions to deployment links and GitHub repos — with strict high-fidelity resolution paths.**
 
 [![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?style=for-the-badge&logo=node.js)](https://nodejs.org/)
 [![Express](https://img.shields.io/badge/Express-5.x-000000?style=for-the-badge&logo=express)](https://expressjs.com/)
@@ -68,14 +68,13 @@ Instead of just sending a Slack alert, NexusGuard:
 
 ## 🎬 Live Demo — What It Does
 
-| Feature | Description |
-|---|---|
-| 🚀 **Hero Landing Page** | Stunning full-screen landing with animated particle canvas, orbital rings, and live stat counters |
-| 📋 **Log Analysis** | Paste any server log — NexusGuard returns severity, root cause, fix, confidence score |
-| 🧠 **Agent Decision Panel** | See exactly which agents fired and what decision was made |
+| 📋 **Universal Analysis** | Paste logs, Vercel/Netlify links, GitHub repo issues, or human bug descriptions |
+| 🛡️ **Strict Protocol** | High-fidelity output: Affected Area, Root Cause, Fix Steps, Code Patch, Prevention |
+| 🦾 **Inference-First** | AI reasons through unknown errors in any stack (Next.js, Django, Rust, AWS, etc.) |
+| 🧠 **Agent Decision Panel** | See exactly which agents fired, matched RAG entries, and safety audit status |
 | 📡 **Real-Time SSE Feed** | Live event stream — webhook hits broadcast instantly to the dashboard |
-| 💬 **AI SRE Chat** | Talk to a Vigilant SRE Expert powered by the same AI engine |
-| 🔔 **Predictive Alerts** | If the same error hits 2+ times in an hour, NexusGuard auto-escalates to CRITICAL |
+| 💬 **AI SRE Chat** | Talk to a Vigilant SRE Expert powered by the same universal reasoning engine |
+| 🔔 **Predictive Alerts**| If the same error hits 2+ times in an hour, NexusGuard auto-escalates to CRITICAL |
 | 📊 **Analytics Dashboard** | Incident history, severity breakdown, trend charts |
 | 🌙 **Dark Mode UI** | Professional dark glassmorphism design |
 | 🌐 **Multi-Language** | Analysis output in any language |
@@ -146,7 +145,7 @@ Every log analyzed by NexusGuard passes through a **5-stage autonomous pipeline*
 ### 2. 📚 Retrieval Agent / RAG (`retrievalService.js` + `data/errors.js`)
 **Role:** Injects historical incident knowledge into the AI prompt.
 
-- Maintains a **local knowledge base** (`data/errors.js`) of ~30+ known DevOps error patterns with keywords, root causes, and proven fixes
+- Maintains a **universal knowledge base** (`data/errors.js`) of **45+ high-fidelity DevOps error patterns** covering Frontend, Backend, OS, Database, and Cloud Infra.
 - Performs **keyword-based vector search** against the incoming log
 - Returns the top matching incidents as structured context
 - This context is injected into the AI prompt so the LLM reasons with **real institutional knowledge**, not just training data
@@ -250,7 +249,7 @@ nexusguard/
 │   │   ├── monitorService.js  # System health metrics
 │   │   └── streamService.js   # SSE client registry + broadcast
 │   └── data/
-│       └── errors.js          # ~30+ structured DevOps incident entries (RAG KB)
+│       └── errors.js          # 45+ structured DevOps incident entries (Universal RAG KB)
 │
 ├── frontend/
 │   ├── index.html             # Full SPA dashboard (single file, no framework)
@@ -449,7 +448,10 @@ The NexusGuard dashboard is a **single-page application** built with vanilla JS 
 | **Incident Results** | Severity badge, root cause, mitigation steps, confidence |
 | **Predictive Alerts** | Highlighted warning when patterns recur |
 | **Live Feed** | Real-time SSE event list from webhook sources |
-| **AI SRE Chat** | Chat interface backed by the same AI engine |
+| **Affected Area** | Instant identification of the failing stack component (e.g., K8S, NEXT.JS, REDIS) |
+| **Code Patch Terminal** | Syntax-highlighted block with exact copy-pasteable CLI commands or code changes |
+| **Prevention Strategy** | Green-coded proactive measures to stop incident reoccurrence |
+| **AI SRE Chat** | Chat interface backed by the same universal reasoning engine |
 | **Analytics** | Chart.js bar/doughnut charts, incident history table |
 | **System Metrics** | Live backend health stats from `/metrics` |
 

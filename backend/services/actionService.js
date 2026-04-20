@@ -7,9 +7,11 @@ const RECOVERY_MAP = {
   "deadlock":     "RESTART_DB",
   "replication":  "RESTART_DB",
   "stripe":       "FAILOVER_PAYMENT",
-  "payment":      "FAILOVER_PAYMENT",
-  "checkout":     "FAILOVER_PAYMENT",
+  "payment failure": "FAILOVER_PAYMENT",
+  "checkout error": "FAILOVER_PAYMENT",
   "cpu":          "SCALE_OUT",
+  "threshold":    "SCALE_OUT",
+  "spike":        "SCALE_OUT",
   "503":          "SCALE_OUT",
   "latency":      "SCALE_OUT",
   "redis":        "FLUSH_CACHE",
@@ -26,7 +28,13 @@ const RECOVERY_MAP = {
   "dns":          "FLUSH_DNS",
   "401":          "ROTATE_TOKEN",
   "jwt":          "ROTATE_TOKEN",
-  "brute":        "LOCKDOWN_AUTH"
+  "brute":        "LOCKDOWN_AUTH",
+  "defined":      "FIX_SCOPE",
+  "function":     "PATCH_CODE",
+  "cors":         "PATCH_HEADERS",
+  "syntax":       "ROLLBACK_BUILD",
+  "module":       "FIX_DEPS",
+  "port":         "REMAP_PORT"
 };
 
 /**
@@ -61,7 +69,10 @@ export async function triggerAction(result, liveMode = false) {
   const issue = result.issue || "";
   const originalLog = result.originalLog || "";
   const searchText = `${issue} ${originalLog}`.toLowerCase();
-  const matchedKey = Object.keys(RECOVERY_MAP).find(key => searchText.includes(key));
+  // Find all matches and pick the one with the longest keyword (most specific)
+  const matches = Object.keys(RECOVERY_MAP).filter(key => searchText.includes(key));
+  matches.sort((a, b) => b.length - a.length);
+  const matchedKey = matches[0];
   const recoveryCode = matchedKey ? RECOVERY_MAP[matchedKey] : "GENERIC_OPTIMIZE";
 
   const payload = {

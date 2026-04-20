@@ -369,7 +369,7 @@
                         <div class="interaction-layout">
                             <div class="glass-card input-section">
                                 <label class="label-heading">Intelligence Input Console</label>
-                                <textarea id="log-input" placeholder="Paste server logs or a URL (localhost/deployed) here..."></textarea>
+                                <textarea id="log-input" placeholder="Paste server logs, build failures, Vercel/Netlify/GitHub links, or describe the issue manually..."></textarea>
                                 
                                 <div class="input-actions" style="margin-top:10px;">
                                     <button id="auto-detect-btn" class="btn-secondary">
@@ -428,6 +428,10 @@
                                 </div>
                                 <div class="output-content">
                                     <div id="content-issue" class="main-val" data-i18n="MSG_PENDING">Analysis pending...</div>
+                                    <div style="display:flex;gap:10px;margin-top:5px;">
+                                        <div id="severity-badge" class="badge"></div>
+                                        <div id="content-area" class="impact-tag" style="background:rgba(255,b,b,0.05);color:var(--text-secondary);border:1px solid var(--border-color);font-size:0.65rem;padding:2px 8px;display:none;"></div>
+                                     </div>
                                     <div id="content-evidence" class="evidence"></div>
                                     <div id="finance-impact-box" class="impact-tag" style="display:none">
                                         <span data-i18n="TITLE_IMPACT">Risk Exposure</span>: <span id="content-finance">Calculating...</span>
@@ -452,6 +456,10 @@
                                     <i data-lucide="lightbulb"></i> <h3 data-i18n="TITLE_FIX">Suggested Fix</h3>
                                 </div>
                                 <div class="output-content" id="content-suggestion" data-i18n="MSG_REPAIR">Analytical repair in progress...</div>
+                                <div id="prevention-box" class="glass-card" style="display:none;margin-top:1rem;background:rgba(16,185,129,0.05);border-color:rgba(16,185,129,0.2);padding:12px;">
+                                    <div style="font-size:0.65rem;color:var(--success);font-weight:700;text-transform:uppercase;margin-bottom:5px;">System Prevention Strategy</div>
+                                    <div id="content-prevention" style="font-size:0.8rem;opacity:0.8;"></div>
+                                </div>
                             </div>
 
                             <div class="glass-card output-card" id="card-reasoning" style="display:none">
@@ -477,6 +485,10 @@
                             <div class="glass-card output-card" id="card-actions">
                                 <div class="card-header"><i data-lucide="terminal"></i> <h3 data-i18n="TITLE_PATH">Resolution Path</h3></div>
                                 <div class="output-content" id="content-actions" data-i18n="MSG_READY">System ready.</div>
+                                <div id="code-patch-wrapper" style="display:none;margin-top:1rem;">
+                                    <div style="font-size:0.65rem;color:var(--accent-primary);font-weight:700;text-transform:uppercase;margin-bottom:8px;">Suggested Code Patch / Fix</div>
+                                    <pre id="content-patch" style="background:rgba(0,0,0,0.3);padding:1rem;border-radius:8px;font-family:'JetBrains Mono';font-size:0.75rem;overflow-x:auto;border:1px solid var(--border-color);"></pre>
+                                </div>
                                 <button id="download-runbook-btn" class="btn-secondary" style="margin-top:0.75rem;display:none;width:100%;justify-content:center;">
                                     <i data-lucide="download" style="width:14px;height:14px;"></i> Download Runbook (.md)
                                 </button>

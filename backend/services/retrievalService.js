@@ -8,12 +8,22 @@ import { getLearnedContext } from "./knowledgeService.js";
 export function retrieveRelevantErrors(logText) {
   const lower = logText.toLowerCase();
 
+  const PRIORITY_KEYWORDS = ["cpu", "ram", "disk", "oom", "stripe", "500", "502", "504", "fatal", "critical"];
+
   const scoreMatch = (item) => {
     let score = 0;
     const matchedKeywords = [];
     item.keywords.forEach(kw => {
-      if (lower.includes(kw.toLowerCase())) {
-        score += 1 + (kw.length / 100); // Add small bonus for keyword length (specificity)
+      const kwLower = kw.toLowerCase();
+      if (lower.includes(kwLower)) {
+        let baseWeight = 1 + (kw.length / 100);
+        
+        // Priority Keyword Multiplier (e.g. "cpu" should beat "checkout")
+        if (PRIORITY_KEYWORDS.includes(kwLower)) {
+          baseWeight *= 5;
+        }
+        
+        score += baseWeight;
         matchedKeywords.push(kw);
       }
     });
