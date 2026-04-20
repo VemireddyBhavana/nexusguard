@@ -262,7 +262,7 @@ nexusguard/
 │   └── index.cjs              # Node.js script to simulate webhook events
 │
 ├── .gitignore
-├── AGENTATHON_PITCH.md        # Hackathon pitch document
+├── AGENTATHON_PITCH.md        #  pitch document
 └── README.md
 ```
 
@@ -511,7 +511,7 @@ The local engine extracts meaningful words from the log and constructs a plausib
 
 ---
 
-## 🏆 Hackathon Journey
+##  Journey
 
 ### How NexusGuard Was Built — Full Story
 
