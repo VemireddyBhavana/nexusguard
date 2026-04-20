@@ -155,15 +155,147 @@ export const errorDB = [
     fix: "Use heap profiling (node --heap-prof) to identify the leaking object. Remove unremoved event listeners and clear setInterval timers. Check for circular reference patterns."
   },
 
-  // ── UI / CSS ──────────────────────────────────────────────
+  // ── INVISIBLE / SILENT ERRORS [V3 EXPANSION] ───────────────
   {
-    keywords: ["css not working", "flex", "layout issue", "alignment", "overflow"],
-    category: "CSS", issue: "UI Layout Discrepancy",
-    fix: "Inspect display:flex on the parent container. Verify container dimensions and min/max constraints. Use browser DevTools layout panel to identify CSS specificity conflicts."
+    keywords: ["white screen", "blank page", "mount", "react error boundary"],
+    category: "UI/React", issue: "React White Screen of Death (WSOD)",
+    fix: "Check for minified React errors caused by unhandled exceptions in useEffect or lifecycle hooks. Wrap the top-level app in an ErrorBoundary and check the browser console for ChunkLoadError or syntax errors in the main bundle."
   },
   {
-    keywords: ["cors", "access-control-allow-origin", "header", "preflight"],
-    category: "Web Security", issue: "CORS Policy Blocking Request",
-    fix: "Configure the cors() middleware to explicitly allow the calling origin. Ensure preflight OPTIONS requests return the correct Access-Control-Allow-Methods headers."
+    keywords: ["silent fail", "no response", "stalled", "process lock"],
+    category: "System", issue: "Silent Process Lockup (Deadlock)",
+    fix: "The process is alive but not handling I/O. Check for CPU spinning or infinite loops. Use SIGUSR1 to trigger a heap dump and inspect thread stalls in the event loop."
+  },
+  {
+    keywords: ["zombie", "orphan process", "defunct"],
+    category: "OS", issue: "Zombie Process Accumulation",
+    fix: "Parent process failed to wait() on children. Re-parent the processes or restart the container to clear the process table. Verify that the init system (like tini) is properly handling signals."
+  },
+
+  // ── CLOUD & ENTERPRISE [V3 EXPANSION] ──────────────────────
+  {
+    keywords: ["node drain", "preempted", "spot instance", "termination"],
+    category: "Cloud/AWS", issue: "Preemptive Node Termination",
+    fix: "Cloud provider reclaimed the spot instance. Ensure your application handles SIGTERM for graceful shutdown. Check the cluster autoscaler logs to verify if replacement nodes are provisioned."
+  },
+  {
+    keywords: ["ingress", "path not found", "404", "routing", "alb"],
+    category: "Networking", issue: "Ingress Routing Failure",
+    fix: "The Ingress controller cannot find a matching path for the host. Verify the Ingress rule host match and service backend port consistency. Check if the deployment labels match the service selector."
+  },
+  {
+    keywords: ["helm", "rollback", "upgrade failed", "chart error"],
+    category: "DevOps", issue: "Helm Deployment Collision",
+    fix: "Previous deployment is in a failed state and locking the chart. Run 'helm rollback' and prune orphan resources. Check for configuration schema mismatches (values.yaml vs template)."
+  },
+
+  // ── FINTECH & API [V3 EXPANSION] ──────────────────────────
+  {
+    keywords: ["signature mismatch", "webhook verify", "invalid signature"],
+    category: "FinTech/Security", issue: "Webhook Signature Integrity Failure",
+    fix: "The incoming webhook's cryptographic signature does not match your local secret. Ensure the WEBHOOK_SECRET is correctly synced between Stripe/PayPal and your server environment."
+  },
+  {
+    keywords: ["pci compliance", "encryption", "cipher", "tls 1.2"],
+    category: "Security", issue: "Deprecated Encryption Protocol Detected",
+    fix: "Your system is attempting to use TLS 1.0/1.1 or a weak cipher suite. Force TLS 1.2+ in your server config (e.g. Nginx ssl_protocols). Update your crypto libraries to meet modern PCI-DSS standards."
+  },
+
+  // ── DATABASE & SCALE [V3 EXPANSION] ───────────────────────
+  {
+    keywords: ["too many clients", "max_connections", "pool exhausted"],
+    category: "Scale", issue: "Database Connection Pool Exhaustion",
+    fix: "The application has exceeded the maximum allowed connections to the database. Implement a connection pooler like PgBouncer. Increase the database server's max_connections setting and audit for unclosed client connections."
+  },
+  {
+    keywords: ["partition", "index", "bloat", "maintenance"],
+    category: "Database", issue: "Query Performance Degraded (Index Bloat)",
+    fix: "Table statistics are stale or indices are bloated. Run REINDEX or VACUUM ANALYZE. Archive historical data to cold storage to reduce the primary table scan time."
+  },
+  // ── CLOUD INFRA & PERMISSIONS [V3+ EXPANSION] ─────────────
+  {
+    keywords: ["s3", "403", "access denied", "bucket", "policy"],
+    category: "Cloud/AWS", issue: "S3 Bucket Access Denied (IAM/ACL)",
+    fix: "Verify if the IAM User/Role has 's3:GetObject' permissions. Check the S3 Bucket Policy for explicit Deny statements. Ensure Block Public Access (BPA) is not interfering with cross-account requests."
+  },
+  {
+    keywords: ["lambda", "iam", "permission", "not authorized", "sts"],
+    category: "Cloud/AWS", issue: "Lambda Execution Role Missing Permissions",
+    fix: "The Lambda function lacks the required 'Action' in its Execution Role. Update the IAM Policy to include the specific service permission (e.g. 'dynamodb:PutItem'). Check for SCPs in AWS Organizations."
+  },
+  {
+    keywords: ["gcp", "quota exceeded", "limit", "resource exhausted"],
+    category: "Cloud/GCP", issue: "GCP Project Quota Exhausted",
+    fix: "Your project has hit a regional or global quota limit (e.g. CPUs, Static IPs). Request a quota increase via GCP Console or migrate resources to a different region with higher availability."
+  },
+
+  // ── MODERN WEB & FRAMEWORKS [V3+ EXPANSION] ───────────────
+  {
+    keywords: ["hydration", "react", "mismatch", "server-side", "client"],
+    category: "Web Framework", issue: "Next.js Hydration Mismatch",
+    fix: "The HTML rendered on the server differs from the client-side initial render. Ensure that dynamic data like Dates or Math.random() are only accessed inside useEffect or use suppressHydrationWarning if necessary."
+  },
+  {
+    keywords: ["hmr", "vite", "websocket", "hot reload", "failed"],
+    category: "Dev Tools", issue: "Vite HMR Connection Failure",
+    fix: "The browser cannot connect to the Vite dev server via WebSocket. Check if you are behind a proxy that isn't forwarding WS traffic. Ensure the 'server.hmr.port' is not blocked by a local firewall."
+  },
+
+  // ── SAAS & EXTERNAL APIS [V3+ EXPANSION] ──────────────────
+  {
+    keywords: ["cloudflare", "522", "origin timeout", "connection"],
+    category: "SaaS/CDNs", issue: "Cloudflare 522 Connection Timeout",
+    fix: "Cloudflare cannot establish a TCP connection to your origin server. Verify that your origin IP is correct in DNS settings and that your server's firewall (iptables/ufw) allows Cloudflare's IP ranges."
+  },
+  {
+    keywords: ["vercel", "504", "function timeout", "lambda timeout"],
+    category: "SaaS/Vercel", issue: "Vercel Serverless Function Timeout",
+    fix: "The Vercel function exceeded the execution limit (usually 10s-60s depending on plan). Optimize the function logic, use streaming responses, or move heavy tasks to a background worker engine."
+  },
+  {
+    keywords: ["oauth", "invalid_state", "handshake", "callback"],
+    category: "Auth/API", issue: "OAuth2 Handshake State Mismatch",
+    fix: "The 'state' parameter returned by the OAuth provider does not match the one stored in your session. This could be a CSRF attempt or a session timeout. Ensure session cookies are correctly set with SameSite=Lax."
+  },
+
+  // ── CONTAINER NETWORKING [V3+ EXPANSION] ──────────────────
+  {
+    keywords: ["subnet", "ip collision", "bridge", "docker", "cni"],
+    category: "Infrastructure", issue: "Docker/CNI Subnet Collision",
+    fix: "The Docker bridge subnet overlaps with your local network or a VPC CIDR. Modify the 'bip' in /etc/docker/daemon.json to a non-conflicting private IP range."
+  },
+  {
+    keywords: ["cni", "kubelet", "network plugin", "not ready"],
+    category: "Kubernetes", issue: "CNI Plugin Not Ready",
+    fix: "The Kubelet reports 'NetworkReady=false'. Ensure the CNI (Calico/Flannel/Cilium) pods are running and have the correct permissions. Check /etc/cni/net.d/ for valid configuration files."
+  },
+
+  // ── ADVANCED DATA SYSTEMS [V3+ EXPANSION] ─────────────────
+  {
+    keywords: ["elasticsearch", "circuit breaker", "heap", "parent"],
+    category: "Database/ES", issue: "Elasticsearch Circuit Breaker Triggered",
+    fix: "The JVM heap usage exceeded the node limit, and ES stopped executing requests to prevent OOM. Increase the heap size (ES_JAVA_OPTS) or optimize the aggregation query to use less memory."
+  },
+  {
+    keywords: ["rabbitmq", "watermark", "memory", "blocked"],
+    category: "Messaging", issue: "RabbitMQ Memory High Watermark Blocked",
+    fix: "RabbitMQ has paused all producers because memory usage is too high. Increase the RAM allocation or enable paging to disk. Consume messages from the queue faster to reduce the backlog."
+  },
+  {
+    keywords: ["kafka", "under-replicated", "partition", "isr"],
+    category: "Messaging/Kafka", issue: "Kafka Under-Replicated Partitions",
+    fix: "One or more Kafka brokers are offline or struggling to sync. Check broker logs for disk errors or network partitioning. Increase 'replication.factor' if data durability is a concern."
+  },
+
+  // ── ENTERPRISE & ADMISSION [V3+ EXPANSION] ────────────────
+  {
+    keywords: ["webhook", "replay", "signature", "already processed"],
+    category: "SaaS/Security", issue: "Stripe Webhook Replay Attack Detection",
+    fix: "An incoming webhook was detected with an old timestamp or a signature that was already processed. Implement idempotency keys in your database to prevent duplicate processing of the same event."
+  },
+  {
+    keywords: ["openshift", "route", "admission", "rejected"],
+    category: "Platform", issue: "OpenShift Route Admission Rejected",
+    fix: "The OpenShift router rejected the route because the hostname is already in use or the certificate is invalid. Check 'oc get route -o yaml' for the 'status' field details."
   }
 ];

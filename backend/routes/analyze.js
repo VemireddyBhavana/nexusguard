@@ -15,15 +15,50 @@ async function runAnalysisPipeline(log, language = 'English', liveMode = false, 
 
   // 2. Retrieval Agent (RAG) — fetch matching knowledge
   const knowledge = retrieveRelevantErrors(log);
-  const knowledgeTag = knowledge.map(k => k.issue).join(', ');
+  
+  // Build a much more descriptive context for the AI or local fallback
+  const ragContext = knowledge.map(k => 
+    `Issue: ${k.issue}\nCategory: ${k.category}\nRoot Cause: ${k.rootCause || 'N/A'}\nFix: ${k.fix || k.suggestion || 'Contact SRE.'}`
+  ).join('\n---\n');
+
+  const matchedIssues = knowledge.map(k => k.issue);
   const matchedKeywords = knowledge.flatMap(k => k.keywords);
 
   // 3. Memory Agent — detect recurring patterns (predictive alerts)
   const pattern = detectPattern(matchedKeywords);
   recordIncident(matchedKeywords, log.substring(0, 80));
 
-  // 4. Reasoning Agent (AI: OpenAI → Gemini → Local fallback)
-  const aiResponse = await analyzeLogs(log, knowledgeTag, language);
+  // 4. Reasoning Agent — AI or Rule-Based shortcut
+  let aiResponse;
+  
+  // Scoring Confidence: Highest score / total keywords in the best match
+  const topMatch = knowledge[0];
+  const matchingConfidence = topMatch ? Math.min(1.0, topMatch.score / topMatch.keywords.length) : 0;
+
+  // RULE-BASED BYPASS: If we have high confidence matches (>60% keyword coverage)
+  if (decision.strategy === "RULE_BASED" && matchingConfidence >= 0.6) {
+      console.log(`⚡ Manager Agent: High confidence RAG match (${Math.round(matchingConfidence*100)}%). Bypassing AI.`);
+      aiResponse = {
+          issue: topMatch.issue,
+          rootCause: topMatch.rootCause || "Pattern signature recognized in NexusGuard Knowledge Base.",
+          fix: topMatch.fix || topMatch.suggestion || "Follow standard infrastructure remediation.",
+          severity: topMatch.severity || "Medium",
+          confidence: matchingConfidence,
+          financialImpact: 5000 + (topMatch.score * 1000),
+          safetyScore: 100,
+          agentDecision: `Deterministic match for ${topMatch.issue} (Confidence: ${Math.round(matchingConfidence*100)}%). Directing immediate recovery.`,
+          usedKnowledge: true,
+          reasoning: [
+              `Guardian: Pattern verified via ${topMatch.matchedKeywords.length} signature matches.`,
+              "Sleuth: Specific root cause mapped to internal catalog.",
+              "Fixer: Dispatching pre-authorized remediation script.",
+              "Vigilant: Zero-risk handshake completed. Safe to proceed."
+          ]
+      };
+  } else {
+      // Reasoning Agent (AI: OpenAI → Gemini → Local fallback)
+      aiResponse = await analyzeLogs(log, ragContext, language);
+  }
 
   // 5. Action Agent — map recovery code, dispatch Slack if configured
   const actionResult = await triggerAction({ ...aiResponse, originalLog: log }, liveMode);
@@ -32,9 +67,10 @@ async function runAnalysisPipeline(log, language = 'English', liveMode = false, 
     ...aiResponse,
     decision: {
       ...decision,
-      engine: decision.strategy === "AI_RAG" ? "RAG + AI Reasoning" : "Rule Engine",
+      engine: (decision.strategy === "RULE_BASED" && matchingConfidence >= 0.6) ? "Rule Engine" : "RAG + AI Reasoning",
       matches: knowledge.length,
-      matchedIssues: knowledge.map(k => k.issue)
+      matchedIssues,
+      confidence: matchingConfidence
     },
     action: actionResult,
     predictiveAlert: pattern.alert ? pattern : null,

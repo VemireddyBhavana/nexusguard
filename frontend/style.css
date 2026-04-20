@@ -336,12 +336,17 @@ td { padding: 1rem 1.5rem; font-size: 0.875rem; color: var(--text-primary); bord
 
 /* Analytics */
 .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
-.metric-card { display: flex; flex-direction: column; gap: 0.5rem; }
-.metric-card.highlight { border-color: var(--accent-primary); background: rgba(59, 130, 246, 0.05); }
+.metric-card { display: flex; flex-direction: column; gap: 0.5rem; transition: transform 0.3s ease, border-color 0.3s ease; }
+.metric-card:hover { transform: translateY(-4px); border-color: var(--accent-primary); }
+.metric-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem; }
 .metric-label { font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.05em; }
 .metric-value { font-size: 1.5rem; font-weight: 800; color: white; letter-spacing: -0.01em; }
+.metric-trend { display: flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 700; color: var(--text-secondary); }
+.trend-up { color: var(--success); }
+.trend-down { color: var(--danger); }
 
-.chart-container { padding: 1.5rem; }
+.chart-container { padding: 1.5rem; position: relative; overflow: hidden; }
+.chart-container::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--accent-gradient); opacity: 0.2; }
 .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 .chart-title { font-size: 1rem; font-weight: 600; }
 .chart-period { font-size: 0.75rem; color: var(--text-secondary); }
@@ -1690,3 +1695,227 @@ kbd {
 .form-row {
     margin-bottom: 2rem;
 }
+
+/* ── DIAGNOSTIC BADGES [V3 PREMIUM] ───────────────────────── */
+.badge-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.diag-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+}
+
+.badge-problem {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.3);
+    animation: badgePulseRed 2s infinite;
+}
+
+.badge-issue {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.badge-solution {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+@keyframes badgePulseRed {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Scan URL Button */
+.btn-scan-url {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    color: white;
+    border: none;
+    padding: 0.45rem 1rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-left: 10px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-scan-url:hover {
+    filter: brightness(1.1);
+    transform: scale(1.05) translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-scan-url:active {
+    transform: scale(0.98);
+}
+
+
+/* 🧬 Workflow Builder Interactions */
+.wf-node { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.wf-node:hover rect { fill: rgba(59, 130, 246, 0.15); stroke-width: 3px; filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.4)); }
+.wf-node:hover text { fill: var(--accent-primary); }
+.wf-node:active rect { transform: scale(0.98); transform-origin: center; }
+
+/* Spin animation */
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.spin { animation: spin 1s linear infinite; }
+
+
+/* 🪄 Interactive Polish (Global Sync) */
+.nav-item, .wf-block, .kb-source-card, .team-member-row, .status-component-row, .history-item {
+    cursor: pointer !important;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.wf-block:hover, .status-component-row:hover, .kb-source-card:hover {
+    background: rgba(59, 130, 246, 0.1) !important;
+    transform: translateX(4px);
+    box-shadow: -4px 0 0 var(--accent-primary);
+}
+
+.topo-details-panel {
+    animation: panelSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes panelSlideIn {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+/* Interactive Glow for SVG Nodes */
+.wf-node:hover rect {
+    filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.6));
+    stroke-width: 3px;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   UI POLISH — Analytics, Security, Audit, Brain Ingestion
+══════════════════════════════════════════════════════════════════ */
+
+/* 1. Analytics & Metrics */
+.metric-card { position: relative; overflow: hidden; }
+.metric-trend { margin-top: 0.5rem; }
+
+/* 2. Security Center Matrix */
+.matrix-grid { 
+  display: grid; 
+  grid-template-columns: repeat(12, 1fr); 
+  gap: 8px; 
+  margin-top: 1rem; 
+}
+.matrix-node {
+  height: 28px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+.matrix-node:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+  z-index: 5;
+}
+.matrix-node.threat-active {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: var(--danger);
+  animation: threatPulse 1.5s infinite;
+}
+@keyframes threatPulse {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* 3. Audit Ledger Tables */
+.audit-pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.audit-pill.resolved { background: rgba(16, 185, 129, 0.1); color: #4ade80; border: 1px solid rgba(16, 185, 129, 0.2); }
+.audit-pill.active { background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.2); }
+.audit-pill.failed { background: rgba(239, 68, 68, 0.1); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+.audit-table-row { transition: all 0.2s ease; border-bottom: 1px solid var(--border-color); }
+.audit-table-row:hover { background: rgba(255, 255, 255, 0.02); }
+
+/* 4. Brain Ingestion / Knowledge Harvester */
+.intelligence-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.intelligence-card:hover {
+  border-color: var(--accent-secondary);
+  background: rgba(129, 140, 248, 0.05);
+  transform: translateY(-2px);
+}
+.intelligence-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: var(--accent-secondary);
+  opacity: 0.5;
+}
+.int-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.int-category { font-size: 0.65rem; font-weight: 800; color: var(--accent-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+.int-trust { font-size: 0.7rem; color: var(--success); font-weight: 700; }
+.int-fact { font-size: 0.875rem; line-height: 1.5; color: var(--text-primary); }
+.int-footer { display: flex; align-items: center; gap: 8px; font-size: 0.65rem; color: var(--text-secondary); opacity: 0.6; }
+
+/* Ingestion Animation Overlay */
+.ingest-scanner-overlay {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 2px;
+  background: var(--accent-secondary);
+  box-shadow: 0 0 15px var(--accent-secondary);
+  z-index: 10;
+  animation: scaningIngest 2s infinite linear;
+}
+@keyframes scaningIngest {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+

@@ -228,6 +228,10 @@
                     <i data-lucide="database"></i>
                     <span>Knowledge Base</span>
                 </a>
+                <a href="#" class="nav-item" data-view="knowledge-ingest">
+                    <i data-lucide="brain-circuit"></i>
+                    <span>Brain Ingestion</span>
+                </a>
 
                 <div class="nav-group-label sidebar-full-text">MANAGEMENT</div>
                 <a href="#" class="nav-item" data-view="billing">
@@ -358,28 +362,28 @@
                                 </div>
                                 <button id="toggle-monitor" class="btn-toggle" data-i18n="BTN_PAUSE">PAUSE FEED</button>
                             </div>
+                            </div>
                         </section>
 
                         <!-- Input Area -->
                         <div class="interaction-layout">
-
                             <div class="glass-card input-section">
-                                <label class="label-heading" data-i18n="INPUT_HEADING">Intelligence Input</label>
-                                <textarea id="log-input" data-i18n-placeholder="INPUT_PLACEHOLDER"
-                                    placeholder="Enter logs or tap for auto-detect..."></textarea>
-                                <div class="input-actions">
-                                    <select id="log-source">
-                                        <option value="server" data-i18n="SOURCE_SERVER">Server Logs</option>
-                                        <option value="app" data-i18n="SOURCE_APP">Application</option>
-                                    </select>
+                                <label class="label-heading">Intelligence Input Console</label>
+                                <textarea id="log-input" placeholder="Paste server logs or a URL (localhost/deployed) here..."></textarea>
+                                
+                                <div class="input-actions" style="margin-top:10px;">
                                     <button id="auto-detect-btn" class="btn-secondary">
-                                        <i data-lucide="search"></i> <span data-i18n="BTN_AUTO">Auto-Detect</span>
+                                        <i data-lucide="search"></i> <span>Auto-Detect</span>
+                                    </button>
+                                    <button id="scan-url-btn" class="btn-scan-url" style="display:none;">
+                                        <i data-lucide="globe" style="width:14px;height:14px;"></i> <span>Proactive Scan</span>
                                     </button>
                                     <button id="run-btn" class="btn-primary">
-                                        <i data-lucide="play"></i> <span data-i18n="BTN_RUN">Run Agent</span>
+                                        <i data-lucide="play"></i> <span>Run Agent</span>
                                     </button>
                                 </div>
-                                <div id="drop-zone" class="drop-zone">
+
+                                <div id="drop-zone" class="drop-zone" style="margin-top:15px;">
                                     <i data-lucide="upload-cloud" style="width:20px;height:20px;opacity:0.5;"></i>
                                     <span style="font-size:0.75rem;color:var(--text-secondary);">Drop <code>.log</code> / <code>.txt</code> file here or <label for="file-upload" style="color:var(--accent-primary);cursor:pointer;text-decoration:underline;">browse</label></span>
                                     <input type="file" id="file-upload" accept=".log,.txt,.out" style="display:none">
@@ -415,8 +419,13 @@
 
                         <!-- Output Analysis -->
                         <div class="output-grid" id="output-grid">
-                            <div class="glass-card output-card" id="card-issue">
-                                <div class="card-header"><i data-lucide="alert-circle"></i> <h3 data-i18n="TITLE_ISSUE">Detected Issue</h3> <span id="severity-badge" class="badge"></span></div>
+                             <div class="glass-card output-card" id="card-issue">
+                                <div class="card-header">
+                                    <div class="diag-badge badge-problem">
+                                        <i data-lucide="alert-octagon" style="width:14px;height:14px;"></i> CRITICAL PROBLEM
+                                    </div>
+                                    <i data-lucide="alert-circle"></i> <h3 data-i18n="TITLE_ISSUE">Detected Issue</h3> <span id="severity-badge" class="badge"></span>
+                                </div>
                                 <div class="output-content">
                                     <div id="content-issue" class="main-val" data-i18n="MSG_PENDING">Analysis pending...</div>
                                     <div id="content-evidence" class="evidence"></div>
@@ -426,12 +435,22 @@
                                 </div>
                             </div>
                             <div class="glass-card output-card" id="card-root-cause">
-                                <div class="card-header"><i data-lucide="activity"></i> <h3 data-i18n="TITLE_CAUSE">Root Cause</h3></div>
+                                <div class="card-header">
+                                    <div class="diag-badge badge-issue">
+                                        <i data-lucide="info" style="width:14px;height:14px;"></i> SYSTEM ISSUE
+                                    </div>
+                                    <i data-lucide="activity"></i> <h3 data-i18n="TITLE_CAUSE">Root Cause</h3>
+                                </div>
                                 <div class="output-content" id="content-root-cause" data-i18n="MSG_WAITING">Waiting for insights...</div>
                             </div>
                             
                             <div class="glass-card output-card" id="card-suggestion">
-                                <div class="card-header"><i data-lucide="lightbulb"></i> <h3 data-i18n="TITLE_FIX">Suggested Fix</h3></div>
+                                <div class="card-header">
+                                    <div class="diag-badge badge-solution">
+                                        <i data-lucide="check-circle-2" style="width:14px;height:14px;"></i> RESOLUTION PATH
+                                    </div>
+                                    <i data-lucide="lightbulb"></i> <h3 data-i18n="TITLE_FIX">Suggested Fix</h3>
+                                </div>
                                 <div class="output-content" id="content-suggestion" data-i18n="MSG_REPAIR">Analytical repair in progress...</div>
                             </div>
 
@@ -534,9 +553,17 @@
                                 <div class="progress-bar"><div class="fill" style="width: 94%;"></div></div>
                             </div>
                             <div class="glass-card sec-stat">
-                                <span class="label">Active Threats</span>
-                                <div class="val" id="sec-active-threats" style="color:var(--success);">0</div>
-                                <p style="font-size:0.7rem;opacity:0.6;margin-top:0.5rem;">Perception Hub: CLEAR</p>
+                                <span class="label">Audit Readiness</span>
+                                <div style="display:flex;align-items:center;gap:15px;margin-top:0.5rem;">
+                                    <div class="gauge-preview">
+                                        <svg class="health-gauge" viewBox="0 0 36 36" style="width:50px;height:50px;">
+                                            <path class="gauge-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                            <path id="audit-readiness-gauge" class="gauge-fill" stroke-dasharray="98, 100" style="stroke:var(--accent-secondary);" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                            <text id="audit-readiness-text" x="18" y="20.35" class="gauge-percentage">98%</text>
+                                        </svg>
+                                    </div>
+                                    <div style="font-size:0.7rem;opacity:0.7;line-height:1.4;">SOC2 Type II<br>Standard Active</div>
+                                </div>
                             </div>
                             <div class="glass-card sec-stat">
                                 <span class="label">Assets Scanned</span>
@@ -558,7 +585,10 @@
                             <p class="section-subtitle">Tamper-proof traceability of every user interaction and automated AI decision.</p>
                         </div>
                         <div class="history-controls">
-                            <input type="text" id="audit-search" class="search-input" placeholder="Filter audit logs...">
+                            <div style="position:relative;flex:1;">
+                                <i data-lucide="search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:14px;height:14px;opacity:0.4;"></i>
+                                <input type="text" id="audit-search" class="search-input" style="padding-left:36px;" placeholder="Filter by issue, agent, or timestamp...">
+                            </div>
                             <button id="audit-export-pdf" class="btn-secondary">
                                 <i data-lucide="file-text" style="width:14px;height:14px;"></i> Compliance Export
                             </button>
@@ -656,16 +686,36 @@
 
                         <div class="metrics-grid">
                             <div class="glass-card metric-card">
-                                <span class="metric-label" data-i18n="METRIC_UPTIME">NETWORK UPTIME</span>
+                                <div class="metric-header">
+                                    <span class="metric-label" data-i18n="METRIC_UPTIME">NETWORK UPTIME</span>
+                                    <i data-lucide="globe" style="width:14px;height:14px;opacity:0.5;"></i>
+                                </div>
                                 <div class="metric-value" id="uptime-value">99.998%</div>
+                                <div class="metric-trend trend-up">
+                                    <i data-lucide="arrow-up-right" style="width:12px;height:12px;"></i>
+                                    <span>Stable</span>
+                                </div>
                             </div>
                             <div class="glass-card metric-card">
-                                <span class="metric-label" data-i18n="METRIC_COSTS">COSTS PROTECTED</span>
+                                <div class="metric-header">
+                                    <span class="metric-label" data-i18n="METRIC_COSTS">COSTS PROTECTED</span>
+                                    <i data-lucide="dollar-sign" style="width:14px;height:14px;opacity:0.5;"></i>
+                                </div>
                                 <div class="metric-value" id="costs-value">$842,500</div>
+                                <div class="metric-trend trend-up">
+                                    <i data-lucide="trending-up" style="width:12px;height:12px;"></i>
+                                    <span>+$1,240 today</span>
+                                </div>
                             </div>
                             <div class="glass-card metric-card highlight">
-                                <span class="metric-label" data-i18n="METRIC_FIXES">AUTONOMOUS FIXES</span>
+                                <div class="metric-header">
+                                    <span class="metric-label" data-i18n="METRIC_FIXES">AUTONOMOUS FIXES</span>
+                                    <i data-lucide="zap" style="width:14px;height:14px;opacity:0.5;"></i>
+                                </div>
                                 <div class="metric-value" id="incidents-count">0</div>
+                                <div class="metric-trend">
+                                    <span>Total verified</span>
+                                </div>
                             </div>
                         </div>
 
@@ -807,6 +857,53 @@
                         <div style="margin-top:1.5rem;padding:0.85rem 1.25rem;background:rgba(255,255,255,0.02);border:1px solid var(--border-color);border-radius:8px;display:flex;align-items:center;gap:12px;font-size:0.8rem;color:var(--text-secondary);">
                             <span>⌨️</span>
                             <span>Press <kbd style="background:rgba(255,255,255,0.1);padding:1px 6px;border-radius:4px;font-size:0.75rem;color:white;">?</kbd> anywhere to see all keyboard shortcuts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: KNOWLEDGE INGEST (Step 7 Blueprint) -->
+                <div id="view-knowledge-ingest" class="view-content">
+                    <div class="container" style="max-width:800px;">
+                        <div class="page-intro" style="text-align:center;margin-bottom:3rem;">
+                            <div style="display:inline-flex;align-items:center;gap:8px;padding:4px 14px;border-radius:999px;border:1px solid rgba(168,85,247,0.3);background:rgba(168,85,247,0.08);color:#a855f7;font-size:0.72rem;font-weight:700;letter-spacing:0.08em;margin-bottom:1rem;">🛸 ADVANCED CONTEXT</div>
+                            <h2 class="section-title" style="font-size:2rem;margin-bottom:0.75rem;">Knowledge Harvester</h2>
+                            <p class="section-subtitle">Upload documentation or SRE runbooks to expand the agent's RAG expertise.</p>
+                        </div>
+
+                        <div class="glass-card" style="padding:2.5rem;">
+                            <div style="margin-bottom:1.5rem;">
+                                <label style="display:block;margin-bottom:0.75rem;font-weight:700;font-size:0.75rem;text-transform:uppercase;color:var(--accent-primary);letter-spacing:0.05em;">Source Category</label>
+                                <select id="ingest-category" class="glass-input" style="background:rgba(0,0,0,0.3);">
+                                    <option value="Database">Database Performance Tuning</option>
+                                    <option value="Scaling">Cloud Auto-Scaling Runbook</option>
+                                    <option value="Security">Security Incident Response</option>
+                                    <option value="Network">Internal VNET Topology</option>
+                                </select>
+                            </div>
+
+                            <div style="margin-bottom:2rem;">
+                                <label style="display:block;margin-bottom:0.75rem;font-weight:700;font-size:0.75rem;text-transform:uppercase;color:var(--accent-primary);letter-spacing:0.05em;">Documentation / Runbook Content (Step 7)</label>
+                                <textarea id="ingest-content" class="glass-input" rows="10" style="background:rgba(0,0,0,0.3);line-height:1.6;" placeholder="Paste runbook text here. Our RAG engine will tokenize and ingest this context immediately..."></textarea>
+                            </div>
+
+                            <button id="btn-ingest-knowledge" class="btn-primary" style="width:100%;justify-content:center;padding:1rem;font-size:1rem;box-shadow:0 0 20px rgba(59,130,246,0.3);">
+                                <i data-lucide="zap"></i> <span>INGEST INTO GLOBAL ENGINE</span>
+                            </button>
+                        </div>
+
+                        <div style="margin-top:4rem;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+                                <h3 style="font-size:1.1rem;font-weight:700;display:flex;align-items:center;gap:10px;">
+                                    <i data-lucide="brain-circuit" style="width:20px;color:var(--accent-primary);"></i> Locally Ingested Intelligence
+                                </h3>
+                                <div id="ingest-count-badge" style="background:rgba(255,255,255,0.05);padding:4px 12px;border-radius:999px;font-size:0.7rem;color:var(--text-secondary);border:1px solid var(--border-color);">0 Concepts Learned</div>
+                            </div>
+                            <div id="learned-facts-list" style="display:flex;flex-direction:column;gap:1rem;">
+                                <!-- Facts will be populated here -->
+                                <div style="padding:2rem;text-align:center;background:rgba(255,255,255,0.01);border:1px dashed var(--border-color);border-radius:12px;color:var(--text-secondary);font-size:0.85rem;">
+                                    No dynamic knowledge ingested yet. Feed the brain to see improvements in analysis.
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

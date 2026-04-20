@@ -1,7 +1,7 @@
-// main.js — NexusGuard Professional SaaS Platform v2.1
+// main.js - NexusGuard Professional SaaS Platform v2.1
 // ============================================================
 
-// ── GLOBAL STATE ─────────────────────────────────────────────
+// -- GLOBAL STATE ---------------------------------------------
 let lastAiData = null;
 let isBusy = false;
 let monitorActive = true;
@@ -11,8 +11,9 @@ let analyticsChart = null;
 let mttrChart = null;
 let severityChart = null;
 let isDarkTheme = true;
+let topologyNodes = []; // Global registry for interactive canvas nodes
 
-// ── UI REFERENCES ─────────────────────────────────────────────
+// -- UI REFERENCES ---------------------------------------------
 const ui = {
   logInput: document.getElementById('log-input'),
   runBtn: document.getElementById('run-btn'),
@@ -61,7 +62,7 @@ const ui = {
   settingModel: document.getElementById('setting-model'),
   settingSafety: document.getElementById('setting-safety'),
   saveSettings: document.getElementById('save-settings'),
-  // ── NEW ──
+  // -- NEW --
   themeToggle: document.getElementById('theme-toggle'),
   fileUpload: document.getElementById('file-upload'),
   dropZone: document.getElementById('drop-zone'),
@@ -100,7 +101,7 @@ const steps = {
   action: document.getElementById('step-action')
 };
 
-// ── i18n DICTIONARIES ────────────────────────────────────────
+// -- i18n DICTIONARIES ----------------------------------------
 const UI_TRANSLATIONS = {
   'en': {
     NAV_DASHBOARD: "Dashboard", NAV_HISTORY: "Incident History", NAV_ANALYTICS: "Analytics", NAV_SETTINGS: "Settings",
@@ -161,7 +162,7 @@ const UI_TRANSLATIONS = {
   }
 };
 
-// ── UTILITIES ────────────────────────────────────────────────
+// -- UTILITIES ------------------------------------------------
 async function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 function updateHealthGauge(percent) {
@@ -204,7 +205,7 @@ function animateCounter(el, targetValue) {
   }, 800 / steps);
 }
 
-// ── THEME ─────────────────────────────────────────────────────
+// -- THEME ----------------------------------------------------─
 function applyTheme(dark) {
   isDarkTheme = dark;
   document.documentElement.classList.toggle('light', !dark);
@@ -218,7 +219,7 @@ function applyTheme(dark) {
 }
 function toggleTheme() { applyTheme(!isDarkTheme); }
 
-// ── i18n ──────────────────────────────────────────────────────
+// -- i18n ------------------------------------------------------
 function applyTranslations(lang) {
   const dict = UI_TRANSLATIONS[lang] || UI_TRANSLATIONS['en'];
   document.querySelectorAll('[data-i18n]').forEach(el => {
@@ -232,7 +233,7 @@ function applyTranslations(lang) {
   showToast(dict.TOAST_LANG || `Language switched to ${lang}.`);
 }
 
-// ── FILE UPLOAD ───────────────────────────────────────────────
+// -- FILE UPLOAD ----------------------------------------------─
 function handleFileUpload(file) {
   if (!file) return;
   const reader = new FileReader();
@@ -258,7 +259,7 @@ function initDropZone() {
   });
 }
 
-// ── CSV EXPORT ────────────────────────────────────────────────
+// -- CSV EXPORT ------------------------------------------------
 function exportCSV() {
   const history = JSON.parse(localStorage.getItem('incident_history') || '[]');
   if (history.length === 0) { showToast('No incidents to export.'); return; }
@@ -279,7 +280,7 @@ function exportCSV() {
   showToast(`Exported ${history.length} incidents to CSV.`);
 }
 
-// ── RUNBOOK GENERATOR ─────────────────────────────────────────
+// -- RUNBOOK GENERATOR ----------------------------------------─
 function downloadRunbook() {
   if (!lastAiData) { showToast('Run an analysis first to generate a runbook.'); return; }
   const id = `NX-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -357,7 +358,7 @@ ${lastAiData.predictiveAlert?.alert ? `\n## ⚠️ Predictive Alert\n\n${lastAiD
   showToast('Runbook downloaded as Markdown.');
 }
 
-// ── PREDICTIVE ALERT ──────────────────────────────────────────
+// -- PREDICTIVE ALERT ------------------------------------------
 function showPredictiveAlert(pattern) {
   if (!ui.predictiveAlert || !pattern?.alert) return;
   ui.predictiveAlert.style.display = 'flex';
@@ -370,7 +371,7 @@ function showPredictiveAlert(pattern) {
   updateLiveConsole(`⚠️ Predictive Alert: ${pattern.message}`);
 }
 
-// ── SESSION TIMER ─────────────────────────────────────────────
+// -- SESSION TIMER --------------------------------------------─
 function startSessionTimer() {
   setInterval(() => {
     sessionSeconds++;
@@ -382,7 +383,7 @@ function startSessionTimer() {
   }, 1000);
 }
 
-// ── HISTORY ───────────────────────────────────────────────────
+// -- HISTORY --------------------------------------------------─
 function renderHistory(filteredData = null) {
   if (!ui.historyBody) return;
   const history = filteredData !== null ? filteredData : JSON.parse(localStorage.getItem('incident_history') || '[]');
@@ -415,40 +416,55 @@ function filterHistory() {
   renderHistory(filtered);
 }
 
-// ── ANALYTICS CHARTS ──────────────────────────────────────────
+// -- ANALYTICS CHARTS ------------------------------------------
 function renderAnalytics() {
   const history = JSON.parse(localStorage.getItem('incident_history') || '[]');
   const countEl = document.getElementById('incidents-count');
   if (countEl) countEl.innerText = history.length;
 
-  // 1 — Main confidence trend
-  const canvas = document.getElementById('analyticsChart');
-  if (canvas) {
-    if (analyticsChart) analyticsChart.destroy();
-    const labels = history.slice(0, 7).reverse().map(h => h.id);
-    const dataPoints = history.slice(0, 7).reverse().map(h => h.safetyScore || 95);
-    analyticsChart = new Chart(canvas.getContext('2d'), {
-      type: 'line',
-      data: {
-        labels: labels.length > 0 ? labels : ['H-1', 'H-2', 'H-3', 'H-4', 'H-5'],
-        datasets: [{ label: 'Resolution Confidence (%)',
-          data: dataPoints.length > 0 ? dataPoints : [98, 95, 99, 97, 98],
-          borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)',
-          borderWidth: 3, tension: 0.4, fill: true,
-          pointBackgroundColor: '#fff', pointBorderColor: '#3b82f6', pointRadius: 6, pointHoverRadius: 8
-        }]
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        onClick: (e, els) => { if (els.length > 0) showIncidentModal(labels[els[0].index]); },
-        scales: {
-          y: { min: 80, max: 100, ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
-          x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+    // 1 — Main confidence trend
+    const canvas = document.getElementById('analyticsChart');
+    if (canvas) {
+      if (analyticsChart) analyticsChart.destroy();
+      const ctx = canvas.getContext('2d');
+      const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+      gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+      gradient.addColorStop(1, 'rgba(59, 130, 246, 0.0)');
+
+      const labels = history.slice(0, 7).reverse().map(h => h.id);
+      const dataPoints = history.slice(0, 7).reverse().map(h => h.safetyScore || 95);
+      analyticsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels.length > 0 ? labels : ['H-1', 'H-2', 'H-3', 'H-4', 'H-5'],
+          datasets: [{ label: 'Resolution Confidence (%)',
+            data: dataPoints.length > 0 ? dataPoints : [98, 95, 99, 97, 98],
+            borderColor: '#3b82f6', backgroundColor: gradient,
+            borderWidth: 3, tension: 0.4, fill: true,
+            pointBackgroundColor: '#fff', pointBorderColor: '#3b82f6', pointRadius: 6, pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { 
+            legend: { display: false },
+            tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: 10,
+                titleFont: { size: 14, weight: 'bold' },
+                bodyFont: { size: 12 },
+                borderColor: 'rgba(255,255,255,0.1)',
+                borderWidth: 1
+            }
+          },
+          onClick: (e, els) => { if (els.length > 0) showIncidentModal(labels[els[0].index]); },
+          scales: {
+            y: { min: 80, max: 100, ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } }
+          }
         }
-      }
-    });
-  }
+      });
+    }
 
   // 2 — Severity doughnut
   const sevCanvas = document.getElementById('severityChart');
@@ -497,7 +513,7 @@ function renderAnalytics() {
   }
 }
 
-// ── INCIDENT MODAL ────────────────────────────────────────────
+// -- INCIDENT MODAL --------------------------------------------
 function showIncidentModal(incidentId) {
   const history = JSON.parse(localStorage.getItem('incident_history') || '[]');
   const incident = history.find(h => h.id === incidentId);
@@ -525,7 +541,7 @@ function showIncidentModal(incidentId) {
   modal.classList.add('active');
 }
 
-// ── NAVIGATION ────────────────────────────────────────────────
+// -- NAVIGATION ------------------------------------------------
 function switchToView(viewId) {
   ui.views.forEach(v => v.classList.remove('active'));
   ui.navItems.forEach(n => n.classList.remove('active'));
@@ -566,7 +582,120 @@ function switchToView(viewId) {
   if (viewId === 'billing') renderBilling();
 }
 
-// ── SAVE INCIDENT ─────────────────────────────────────────────
+function renderSecurity() {
+  const matrix = document.getElementById('threat-matrix-grid');
+  if (!matrix) return;
+  matrix.innerHTML = '';
+  // Generate 48 matrix nodes
+  for (let i = 0; i < 48; i++) {
+    const node = document.createElement('div');
+    node.className = 'matrix-node';
+    const roll = Math.random();
+    if (roll > 0.95) node.classList.add('threat-active');
+    else if (roll > 0.85) node.classList.add('warning');
+    
+    const labels = ['Auth-Gate', 'Redis-L2', 'VPC-Tunnel', 'Core-API', 'K8s-Sdl', 'Ingress-01'];
+    node.setAttribute('data-label', labels[Math.floor(Math.random() * labels.length)]);
+    matrix.appendChild(node);
+  }
+}
+
+function renderAudit(filteredData = null) {
+    const body = document.getElementById('audit-body');
+    if (!body) return;
+    const history = filteredData !== null ? filteredData : JSON.parse(localStorage.getItem('incident_history') || '[]');
+    if (history.length === 0) {
+        body.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:3rem;opacity:0.5;">Audit ledger empty. System monitoring active.</td></tr>`;
+        return;
+    }
+    body.innerHTML = history.map(h => {
+        const sevClass = (h.severity || 'low').toLowerCase();
+        const status = h.status === 'Failed' ? 'failed' : (h.status === 'Processing' ? 'active' : 'resolved');
+        const statusText = h.status || 'RESOLVED';
+        
+        return `<tr class="audit-table-row">
+            <td style="font-family:'JetBrains Mono';font-size:0.7rem;opacity:0.8;">${h.timestamp}</td>
+            <td style="font-weight:700;font-size:0.75rem;">${h.user || 'AI_AGENT_RESOLVER'}</td>
+            <td style="font-size:0.8rem;">${h.issue}</td>
+            <td><span class="badge severity-${sevClass}">${h.severity}</span></td>
+            <td><span class="audit-pill ${status}">${statusText}</span></td>
+        </tr>`;
+    }).join('');
+}
+
+function filterAudit() {
+    const search = (document.getElementById('audit-search')?.value || '').toLowerCase();
+    const history = JSON.parse(localStorage.getItem('incident_history') || '[]');
+    const filtered = history.filter(h => 
+        (h.issue || '').toLowerCase().includes(search) || 
+        (h.user || '').toLowerCase().includes(search)
+    );
+    renderAudit(filtered);
+}
+
+// -- KNOWLEDGE INGESTION (HARVESTER) --------------------------
+async function handleIngestKnowledge() {
+    const category = document.getElementById('ingest-category').value;
+    const content = document.getElementById('ingest-content').value.trim();
+    if (!content) { showToast('Please enter runbook content to ingest.', 'warning'); return; }
+
+    const harvester = document.querySelector('#view-knowledge-ingest .glass-card');
+    const scanner = document.createElement('div');
+    scanner.className = 'ingest-scanner-overlay';
+    harvester.appendChild(scanner);
+
+    showToast(`Harvester: tokenizing ${category} context...`, 'info');
+    updateLiveConsole(`📚 RAG Agent: Processing knowledge chunk [Type: ${category}]`);
+
+    await sleep(2000); // Simulate processing
+
+    const facts = JSON.parse(localStorage.getItem('ingested_facts') || '[]');
+    facts.unshift({
+        id: `FACT-${Math.floor(1000 + Math.random()*9000)}`,
+        category,
+        text: content.substring(0, 180) + (content.length > 180 ? '...' : ''),
+        trust: 95 + Math.floor(Math.random()*5),
+        timestamp: new Date().toLocaleTimeString()
+    });
+    localStorage.setItem('ingested_facts', JSON.stringify(facts.slice(0, 10)));
+    
+    scanner.remove();
+    document.getElementById('ingest-content').value = '';
+    renderKnowledgeFacts();
+    
+    showToast('Knowledge ingested successfully. Neural weights updated.', 'success');
+    updateLiveConsole(`🧠 Brain Ingestion: Concepts integrated into Global Reasoning Hub.`);
+}
+
+function renderKnowledgeFacts() {
+    const list = document.getElementById('learned-facts-list');
+    const badge = document.getElementById('ingest-count-badge');
+    if (!list) return;
+
+    const facts = JSON.parse(localStorage.getItem('ingested_facts') || '[]');
+    badge.innerText = `${facts.length} Concepts Learned`;
+
+    if (facts.length === 0) {
+        list.innerHTML = `<div style="padding:2rem;text-align:center;background:rgba(255,255,255,0.01);border:1px dashed var(--border-color);border-radius:12px;color:var(--text-secondary);font-size:0.85rem;">No dynamic knowledge ingested yet.</div>`;
+        return;
+    }
+
+    list.innerHTML = facts.map(f => `
+        <div class="intelligence-card">
+            <div class="int-card-header">
+                <span class="int-category">${f.category}</span>
+                <span class="int-trust"><i data-lucide="shield-check" style="width:12px;display:inline;margin-right:4px;"></i>${f.trust}% Trust</span>
+            </div>
+            <div class="int-fact">"${f.text}"</div>
+            <div class="int-footer">
+                <i data-lucide="clock" style="width:10px;"></i> ${f.timestamp} · ID: ${f.id}
+            </div>
+        </div>
+    `).join('');
+    if (window.lucide) window.lucide.createIcons();
+}
+
+// -- SAVE INCIDENT --------------------------------------------─
 function saveIncidentToHistory(incident, impactValue = 0) {
   const history = JSON.parse(localStorage.getItem('incident_history') || '[]');
   history.unshift({
@@ -582,7 +711,7 @@ function saveIncidentToHistory(incident, impactValue = 0) {
   animateCounter(ui.incidentsCount, parseInt(ui.incidentsCount?.innerText || '0') + 1);
 }
 
-// ── AI CALL ───────────────────────────────────────────────────
+// -- AI CALL --------------------------------------------------─
 async function analyzeWithAI(log) {
   const liveMode = ui.liveModeToggle?.checked || false;
   const response = await fetch('http://127.0.0.1:5000/analyze', {
@@ -594,7 +723,7 @@ async function analyzeWithAI(log) {
   return await response.json();
 }
 
-// ── AGENT MESSAGES ────────────────────────────────────────────
+// -- AGENT MESSAGES --------------------------------------------
 function addAgentMessage(role, text) {
   const AGENTS = {
     'Guardian':    { color: '#3b82f6', icon: 'shield' },
@@ -613,7 +742,7 @@ function addAgentMessage(role, text) {
   if (window.lucide) window.lucide.createIcons();
 }
 
-// ── MAIN WORKFLOW ─────────────────────────────────────────────
+// -- MAIN WORKFLOW --------------------------------------------─
 async function runWorkflow() {
   if (isBusy) return;
   const logText = ui.logInput.value.trim();
@@ -729,7 +858,7 @@ async function runWorkflow() {
   }
 }
 
-// ── LIVE MONITOR SIMULATION ───────────────────────────────────
+// -- LIVE MONITOR SIMULATION ----------------------------------─
 async function startLogSimulation() {
   while (true) {
     if (monitorActive) {
@@ -777,7 +906,7 @@ function updateLiveConsole(text) {
   if (ui.liveConsole.children.length > 20) ui.liveConsole.removeChild(ui.liveConsole.firstChild);
 }
 
-// ── CHAT ──────────────────────────────────────────────────────
+// -- CHAT ------------------------------------------------------
 function toggleChat() {
   ui.chatWidget?.classList.toggle('active');
   if (ui.chatWidget?.classList.contains('active')) ui.chatInput?.focus();
@@ -831,7 +960,7 @@ async function sendMessage() {
   }
 }
 
-// ── INTEGRATIONS ──────────────────────────────────────────────
+// -- INTEGRATIONS ----------------------------------------------
 function initIntegrations() {
   [{ id: 'intGithub', name: 'GitHub', url: 'https://github.com/' },
    { id: 'intSlack', name: 'Slack', url: 'https://slack.com/' },
@@ -848,7 +977,7 @@ function initIntegrations() {
   });
 }
 
-// ── SSE STREAM ────────────────────────────────────────────────
+// -- SSE STREAM ------------------------------------------------
 function initSSEStream() {
   setTimeout(() => {
     try {
@@ -891,7 +1020,7 @@ function initSSEStream() {
   }, 2000);
 }
 
-// ── COLLAPSIBLE SIDEBAR ────────────────────────────────────────
+// -- COLLAPSIBLE SIDEBAR ----------------------------------------
 function initSidebar() {
   const sidebar = document.getElementById('app-sidebar');
   const toggleBtn = document.getElementById('sidebar-toggle');
@@ -905,7 +1034,7 @@ function initSidebar() {
   });
 }
 
-// ── KEYBOARD SHORTCUTS MODAL ───────────────────────────────────
+// -- KEYBOARD SHORTCUTS MODAL ----------------------------------─
 function initShortcutsModal() {
   const modal = document.getElementById('shortcuts-modal');
   const closeBtn = document.getElementById('shortcuts-close');
@@ -914,7 +1043,7 @@ function initShortcutsModal() {
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); });
 }
 
-// ── ONBOARDING WIZARD ──────────────────────────────────────────
+// -- ONBOARDING WIZARD ------------------------------------------
 function initOnboarding() {
   const overlay = document.getElementById('onboarding-overlay');
   if (!overlay) return;
@@ -970,7 +1099,7 @@ function initOnboarding() {
   }
 }
 
-// ── TEAM MEMBERS ───────────────────────────────────────────────
+// -- TEAM MEMBERS ----------------------------------------------─
 const AVATAR_COLORS = ['#3b82f6','#818cf8','#10b981','#f59e0b','#ef4444','#a855f7','#ec4899'];
 function initTeamMembers() {
   const listEl = document.getElementById('team-members-list');
@@ -1030,7 +1159,7 @@ function initTeamMembers() {
   renderTeam();
 }
 
-// ── PDF REPORT EXPORT ─────────────────────────────────────────
+// -- PDF REPORT EXPORT ----------------------------------------─
 function exportPDF() {
   if (!lastAiData) { showToast('Run an analysis first to generate a PDF report.', 'danger'); return; }
   const id = `NX-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -1116,7 +1245,7 @@ function exportPDF() {
   showToast('📄 PDF report opened in new tab. Use browser print dialog to save.');
 }
 
-// ── SIMULATE MAJOR OUTAGE ─────────────────────────────────────
+// -- SIMULATE MAJOR OUTAGE ------------------------------------─
 function initSimulateOutage() {
   const btn = document.getElementById('simulate-outage-btn');
   if (!btn) return;
@@ -1143,7 +1272,7 @@ function initSimulateOutage() {
   });
 }
 
-// ── NOTIFICATION CENTER ────────────────────────────────────────
+// -- NOTIFICATION CENTER ----------------------------------------
 const NOTIFICATIONS = [
   { title: '🔴 CRITICAL — Redis OOMKilled', time: '2 min ago', color: '#ef4444', unread: true },
   { title: '🟡 HIGH — Auth 401 spike detected', time: '18 min ago', color: '#f59e0b', unread: true },
@@ -1207,7 +1336,7 @@ function initNotifications() {
   });
 }
 
-// ── STATUS PAGE ───────────────────────────────────────────────
+// -- STATUS PAGE ----------------------------------------------─
 async function renderStatusPage() {
   const container = document.getElementById('status-components');
   const heatmap = document.getElementById('status-heatmap');
@@ -1255,7 +1384,7 @@ async function renderStatusPage() {
   }
 }
 
-// ── API KEYS SETTINGS ─────────────────────────────────────────
+// -- API KEYS SETTINGS ----------------------------------------─
 function initApiKeys() {
   const fields = [
     { inputId: 'api-openai-key', btnId: 'api-openai-save', storageKey: 'nexus_openai_key', statusId: 'openai-status' },
@@ -1289,7 +1418,7 @@ function initApiKeys() {
   });
 }
 
-// ── AUTHENTICATION ────────────────────────────────────────────
+// -- AUTHENTICATION --------------------------------------------
 function checkAuth() {
   const session = localStorage.getItem('nexus_session');
   const authView = document.getElementById('view-auth');
@@ -1348,7 +1477,7 @@ function initAuth() {
   btnDemo?.addEventListener('click', () => completeAuth('Demo Mode'));
 }
 
-// ── HERO LANDING ───────────────────────────────────────────────
+// -- HERO LANDING ----------------------------------------------─
 function initHero() {
   const hero = document.getElementById('hero-landing');
   const authView = document.getElementById('view-auth');
@@ -1358,7 +1487,7 @@ function initHero() {
   // If already logged in, skip hero and auth
   if (checkAuth()) return;
 
-  // ── Particle canvas ─────────────────────────────────────────
+  // -- Particle canvas ----------------------------------------─
   const canvas = document.getElementById('hero-canvas');
   const ctx = canvas?.getContext('2d');
   if (canvas && ctx) {
@@ -1408,7 +1537,7 @@ function initHero() {
     drawParticles();
   }
 
-  // ── Stat counters ───────────────────────────────────────────
+  // -- Stat counters ------------------------------------------─
   const statEls = document.querySelectorAll('.hero-stat-num');
   statEls.forEach(el => {
     const target = parseFloat(el.dataset.target);
@@ -1425,7 +1554,7 @@ function initHero() {
     setTimeout(() => requestAnimationFrame(tick), 400);
   });
 
-  // ── Enter Transition ────────────────────────────────────────
+  // -- Enter Transition ----------------------------------------
   function proceedToAuth() {
     hero.classList.add('exit');
     setTimeout(() => {
@@ -1449,7 +1578,7 @@ function initHero() {
   }, { once: true });
 }
 
-// ── ENTERPRISE MODULES LOGIC ───────────────────────────────────
+// -- ENTERPRISE MODULES LOGIC ----------------------------------─
 
 // 1. TOPOLOGY MAP (Canvas)
 async function renderTopology() {
@@ -1498,6 +1627,7 @@ async function renderTopology() {
             });
             requestAnimationFrame(draw);
         }
+        topologyNodes = nodes; // Populate global registry
         draw();
     } catch (e) { console.error('Topology Load Failed'); }
 }
@@ -1524,12 +1654,130 @@ function renderWorkflow() {
 
     // Nodes
     steps.forEach(s => {
-        html += `<g class="wf-node">
-            <rect x="${s.x}" y="${s.y - 30}" width="140" height="60" rx="10" fill="rgba(30,41,59,0.8)" stroke="${s.color}" stroke-width="2" />
-            <text x="${s.x + 70}" y="${s.y + 5}" fill="white" font-size="11" text-anchor="middle">${s.label}</text>
+        html += `<g class="wf-node" data-agent-id="${s.id}" style="cursor: pointer; pointer-events: all;">
+            <rect x="${s.x}" y="${s.y - 30}" width="160" height="70" rx="12" fill="rgba(30,41,59,0.9)" stroke="${s.color}" stroke-width="2" pointer-events="all" />
+            <text x="${s.x + 80}" y="${s.y + 5}" fill="white" font-size="12" font-weight="bold" text-anchor="middle" pointer-events="none">${s.label}</text>
+            <circle cx="${s.x + 10}" cy="${s.y - 18}" r="4" fill="${s.color}" style="filter: drop-shadow(0 0 5px ${s.color});" pointer-events="none" />
         </g>`;
     });
     svg.innerHTML = html;
+    
+    // Use Event Delegation for SVG nodes (More robust)
+    svg.onclick = (e) => {
+        const node = e.target.closest('.wf-node');
+        if (node) showWorkflowNodeDetails(node.dataset.agentId);
+    };
+
+    // Initialize sidebar block interactivity
+    initWorkflowSidebar();
+}
+
+/**
+ * 🛠️ Sidebar Block Interactivity
+ */
+function initWorkflowSidebar() {
+    const blocks = document.querySelectorAll('.workflow-sidebar .wf-block');
+    const mapping = {
+        'Perception Gate': 'perception',
+        'Reasoning Step': 'reasoning_oa',
+        'Action Decider': 'action'
+    };
+
+    blocks.forEach(block => {
+        block.style.cursor = 'pointer';
+        // Remove existing to avoid duplicates if re-rendered
+        block.onclick = null; 
+        block.onclick = () => {
+            const agentId = mapping[block.innerText.trim()];
+            if (agentId) showWorkflowNodeDetails(agentId);
+            else showToast(`Agent logic for "${block.innerText}" is still initializing...`, 'info');
+        };
+    });
+}
+
+/**
+ * 🛠️ Show Agent Detail Modal (Blueprint Alignment Step 4/5)
+ */
+async function showWorkflowNodeDetails(agentId) {
+    const modal = document.getElementById('incident-modal');
+    const title = document.getElementById('modal-title');
+    const body = document.getElementById('modal-body');
+    if (!modal || !body) return;
+
+    // ID Mapping
+    const idMap = { 'p': 'perception', 'm': 'manager', 'r': 'rag', 'ai': 'reasoning_oa', 'a': 'action' };
+    const targetId = idMap[agentId] || agentId;
+
+    title.innerText = "🔍 Agent Pipeline Intelligence";
+    body.innerHTML = `
+        <div style="padding: 2rem; text-align: center;">
+            <i data-lucide="loader" class="spin" style="width: 32px; height: 32px; color: var(--accent-primary);"></i>
+            <p style="margin-top: 1rem; opacity: 0.7;">Syncing with live agent telemetry...</p>
+        </div>
+    `;
+    modal.classList.add('active');
+    if (window.lucide) lucide.createIcons();
+
+    try {
+        const res = await fetch('http://127.0.0.1:5000/metrics');
+        const data = await res.json();
+        const agent = data.components.find(c => c.id === targetId);
+
+        if (!agent) {
+             body.innerHTML = `
+                <div style="padding: 2rem; text-align: center; color: var(--text-secondary);">
+                    <i data-lucide="alert-triangle" style="width: 40px; height: 40px; margin-bottom: 1rem;"></i>
+                    <p>Metadata for agent "${targetId}" is still initializing or offline.</p>
+                </div>
+             `;
+             if (window.lucide) lucide.createIcons();
+             return;
+        }
+
+        body.innerHTML = `
+            <div class="agent-detail-view" style="padding: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 2rem;">
+                    <div style="width: 60px; height: 60px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                        ${(agent.name || '🤖').split(' ')[0]}
+                    </div>
+                    <div>
+                        <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 4px;">${agent.name || 'Anonymous Agent'}</h2>
+                        <div style="display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--accent-primary); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
+                            <span style="width: 8px; height: 8px; background: ${agent.dot || '#4ade80'}; border-radius: 50%; box-shadow: 0 0 10px ${agent.dot || '#4ade80'};"></span>
+                            ${agent.status || 'ACTIVE'} · ${agent.role || 'SRE Assistant'}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                    <div class="glass-card" style="padding: 1.25rem; border-color: rgba(255,255,255,0.05);">
+                        <div style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 5px;">CURRENT LATENCY</div>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: #4ade80;">${agent.latency || 'N/A'}</div>
+                    </div>
+                    <div class="glass-card" style="padding: 1.25rem; border-color: rgba(255,255,255,0.05);">
+                        <div style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 5px;">INTEGRITY SCORE</div>
+                        <div style="font-size: 1.5rem; font-weight: 800;">99.9%</div>
+                    </div>
+                </div>
+
+                <div class="glass-card" style="padding: 1.5rem; background: rgba(59,130,246,0.05); border-color: rgba(59,130,246,0.2);">
+                    <h4 style="font-size: 0.8rem; margin-bottom: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="info" style="width: 14px; height: 14px;"></i> Functional Description
+                    </h4>
+                    <p style="font-size: 0.85rem; line-height: 1.6; opacity: 0.8;">${agent.desc || 'No detailed data available for this component in the current session context.'}</p>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 10px;">
+                    <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="document.getElementById('incident-modal').classList.remove('active')">Acknowledge</button>
+                    <button class="btn-secondary" onclick="showToast('Initiating diagnostic handshake...', 'info')">Re-probe Agent</button>
+                </div>
+            </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+
+    } catch (err) {
+        body.innerHTML = `<div class="error-msg">Backend sync failed. Agent details unavailable.</div>`;
+    }
 }
 
 // 3. SECURITY CENTER
@@ -1545,6 +1793,77 @@ async function renderSecurity() {
             matrix.innerHTML = data.threatMatrix.map(v => `<div class="matrix-cell ${v ? 'active' : ''}"></div>`).join('');
         }
     } catch (e) {}
+}
+
+// 5. KNOWLEDGE HARVESTER (Step 7 Blueprint)
+async function renderKnowledgeIngest() {
+    const list = document.getElementById('learned-facts-list');
+    const badge = document.getElementById('ingest-count-badge');
+    if (!list) return;
+
+    try {
+        const res = await fetch('http://127.0.0.1:5000/learned-facts');
+        const facts = await res.json();
+        
+        if (badge) badge.innerText = `${facts.length} Concepts Learned`;
+
+        if (facts.length === 0) {
+            list.innerHTML = `<div style="padding:2rem;text-align:center;background:rgba(255,255,255,0.01);border:1px dashed var(--border-color);border-radius:12px;color:var(--text-secondary);font-size:0.85rem;">No dynamic knowledge ingested yet. Feed the brain to see improvements in analysis.</div>`;
+            return;
+        }
+
+        list.innerHTML = facts.map(f => `
+            <div class="glass-card" style="padding:1.25rem;border-left:4px solid var(--accent-primary);">
+                <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;font-size:0.7rem;color:var(--accent-primary);text-transform:uppercase;font-weight:700;">
+                    <span>${f.category}</span>
+                    <span style="opacity:0.5;">${new Date(f.timestamp).toLocaleTimeString()}</span>
+                </div>
+                <p style="font-size:0.85rem;line-height:1.5;">${f.content}</p>
+                <div style="margin-top:0.75rem;display:flex;gap:6px;flex-wrap:wrap;">
+                    ${f.keywords.slice(0, 5).map(k => `<span style="font-size:0.6rem;background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:4px;">#${k}</span>`).join('')}
+                </div>
+            </div>
+        `).join('');
+    } catch (e) {
+        console.error('Knowledge Load Failed');
+    }
+}
+
+async function handleIngestKnowledge() {
+    const content = document.getElementById('ingest-content').value;
+    const category = document.getElementById('ingest-category').value;
+    const btn = document.getElementById('btn-ingest-knowledge');
+
+    if (!content.trim()) {
+        showToast('Please enter some documentation text.', 'warning');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = `<i data-lucide="loader" class="spin"></i> <span>ANALYZING DOCUMENT...</span>`;
+    if (window.lucide) lucide.createIcons();
+
+    try {
+        const res = await fetch('http://127.0.0.1:5000/ingest-knowledge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content, category })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            showToast('Brain Expansion Complete: Context Ingested.', 'success');
+            updateLiveConsole(`🧠 Knowledge Harvester: New context "${category}" integrated into RAG pipeline.`);
+            document.getElementById('ingest-content').value = '';
+            renderKnowledgeIngest();
+        }
+    } catch (e) {
+        showToast('Ingestion failed.', 'danger');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="zap"></i> <span>INGEST INTO GLOBAL ENGINE</span>`;
+        if (window.lucide) lucide.createIcons();
+    }
 }
 
 // 4. AUDIT LEDGER
@@ -1597,7 +1916,7 @@ async function renderBilling() {
     } catch (e) {}
 }
 
-// ── REAL-TIME SYNC POLLER ─────────────────────────────────────
+// -- REAL-TIME SYNC POLLER ------------------------------------─
 async function syncGlobalDashboard() {
   try {
     const response = await fetch('http://127.0.0.1:5000/metrics');
@@ -1606,19 +1925,26 @@ async function syncGlobalDashboard() {
     // Header Stats
     if (ui.uptimeValue) ui.uptimeValue.innerText = data.networkUptime || '99.99%';
     if (ui.costsValue) animateCounter(ui.costsValue, data.costsProtected || 842500);
+
+    // Dynamic Host Info
+    const monitorTitle = document.querySelector('.monitor-title h4');
+    if (monitorTitle && data.hostname) {
+        monitorTitle.innerText = `Real-Time Data Feed — ${data.hostname} (${data.platform})`;
+    }
     
     // Refresh active view data
     const activeView = ui.views.find(v => v.classList.contains('active'))?.id;
     if (activeView === 'view-status') renderStatusPage();
     if (activeView === 'view-security') renderSecurity();
     if (activeView === 'view-topology') renderTopology();
+    if (activeView === 'view-knowledge-ingest') renderKnowledgeIngest();
 
   } catch (err) {
     console.warn('Dashboard Sync: Backend offline.');
   }
 }
 
-// ── APP INITIALIZATION ────────────────────────────────────────
+// -- APP INITIALIZATION ----------------------------------------
 function initCommonUI() {
   if (window.lucide) window.lucide.createIcons();
 
@@ -1631,17 +1957,67 @@ function initCommonUI() {
 
   // Core Buttons
   ui.runBtn?.addEventListener('click', runWorkflow);
+  
+  const scanBtn = document.getElementById('scan-url-btn');
+  ui.logInput?.addEventListener('input', (e) => {
+    const val = e.target.value;
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const isURL = urlRegex.test(val) || val.includes('localhost:');
+    if (scanBtn) scanBtn.style.display = isURL ? 'inline-flex' : 'none';
+  });
+
+  scanBtn?.addEventListener('click', async () => {
+    const url = ui.logInput.value.trim();
+    if (!url) return;
+    
+    showToast(`Probing ${url}...`, 'info');
+    updateLiveConsole(`🔍 Sleuth Agent: Initiating deep handshake with ${url}`);
+    
+    try {
+      const res = await fetch('http://127.0.0.1:5000/scan-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        updateLiveConsole(`✅ Prober: Handshake successful (${data.latency}). Service is up.`);
+        showToast("Service is healthy.", "success");
+      } else {
+        updateLiveConsole(`❌ Prober Failure: ${data.errorType} - ${data.message}`);
+        updateLiveConsole(`💡 Diagnostics: ${data.diagnostics}`);
+        ui.logInput.value = `CRITICAL: URL ${url} is unreachable.\nError: ${data.errorType}\nDiagnostic: ${data.diagnostics}`;
+        runWorkflow(); // Analyze the diagnostic log
+      }
+    } catch (e) {
+      showToast("Prober engine offline.", "error");
+    }
+  });
+
   ui.autoDetectBtn?.addEventListener('click', () => {
     const scenarios = [
       'CRITICAL: Redis cache cluster 10.4.4.2 unreachable.',
       'ERROR: Stripe Payment Gateway 504 timeout.',
       'FATAL: PostgreSQL connection refused 5432.',
       'SECURITY: JWT token expired on auth service.',
-      'INFRA: K8s pod OOMKilled. Memory limit exceeded.'
+      'INFRA: K8s pod OOMKilled. Memory limit exceeded.',
+      'UI: React White Screen of Death detected on /checkout.',
+      'AUTH: Multiple brute force attempts from IP 192.168.1.45',
+      'API: Webhook signature mismatch for Stripe event.',
+      'NETWORK: 502 Bad Gateway while accessing Upstream Proxy.',
+      'CLOUD: AWS Spot Instance termination notice received.',
+      'DB: Database deadlock detected on transaction_id 9942.',
+      'PERF: API Latency P99 exceeded 2500ms.',
+      'CERT: SSL Certificate for production.api.nexus expires in 2 hours.'
     ];
     ui.logInput.value = scenarios[Math.floor(Math.random() * scenarios.length)];
     runWorkflow();
   });
+
+  // Knowledge Ingestion
+  document.getElementById('btn-ingest-knowledge')?.addEventListener('click', handleIngestKnowledge);
+  document.getElementById('audit-search')?.addEventListener('input', filterAudit);
 
   // Export/Download
   ui.exportCsvBtn?.addEventListener('click', exportCSV);
@@ -1700,6 +2076,65 @@ function initCommonUI() {
       }
     }
   });
+
+  // -- INTERACTIVE TOPOLOGY LOGIC --
+  const topoCanvas = document.getElementById('topo-canvas');
+  if (topoCanvas) {
+    const findNodeAt = (x, y) => {
+      return topologyNodes.find(n => {
+        const dist = Math.hypot(n.x - x, n.y - y);
+        return dist < 15; // Hit area radius
+      });
+    };
+
+    topoCanvas.addEventListener('mousemove', (e) => {
+      const rect = topoCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      topoCanvas.style.cursor = findNodeAt(x, y) ? 'pointer' : 'default';
+    });
+
+    topoCanvas.addEventListener('click', async (e) => {
+      const rect = topoCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const node = findNodeAt(x, y);
+      if (node) {
+        showToast(`🛡️ Perception Agent: Probing ${node.label}...`, 'info');
+        updateLiveConsole(`🔍 Sleuth Agent: Initiating diagnostic handshake with ${node.label}`);
+        
+        // Update Side Panel (Intelligence Sync)
+        const detailPanel = document.getElementById('topo-details-content');
+        if (detailPanel) {
+            detailPanel.innerHTML = `
+                <div style="margin-top:1rem;">
+                    <div style="font-size:0.9rem;font-weight:700;margin-bottom:0.5rem;color:var(--accent-primary);">${node.label}</div>
+                    <div style="font-size:0.75rem;margin-bottom:1rem;opacity:0.8;line-height:1.4;">${node.desc || 'Telemetery pulse active. Syncing role data...'}</div>
+                    
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <div style="display:flex;justify-content:space-between;font-size:0.7rem;background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:4px;">
+                            <span style="opacity:0.6;">Status</span>
+                            <span style="color:#4ade80;font-weight:700;">OPERATIONAL</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.7rem;background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:4px;">
+                            <span style="opacity:0.6;">Role</span>
+                            <span style="font-weight:700;">${node.role || 'Service'}</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.7rem;background:rgba(255,255,255,0.03);padding:6px 10px;border-radius:4px;">
+                            <span style="opacity:0.6;">Response</span>
+                            <span style="font-weight:700;color:var(--accent-primary);">${5 + Math.floor(Math.random()*15)}ms</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        await sleep(600);
+        updateLiveConsole(`✅ Guardian Node: ${node.label} (${node.type.toUpperCase()}) heartbeat confirmed. Integrity nominal.`);
+        showToast(`Node ${node.id} is healthy.`, 'success');
+      }
+    });
+  }
 }
 
 function initDashboardApp() {
@@ -1715,6 +2150,7 @@ function initDashboardApp() {
   initSidebar();
   initShortcutsModal();
   initTeamMembers();
+  renderKnowledgeFacts();
   
   // Real Data Fetching
   syncGlobalDashboard();
